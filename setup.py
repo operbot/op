@@ -21,6 +21,7 @@ setup(
     long_description=read(),
     license="Public Domain",
     packages=["op"],
+    scripts=["bin/op"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "License :: Public Domain",

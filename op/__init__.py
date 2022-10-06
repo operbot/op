@@ -51,7 +51,7 @@ from .dft import Default
 from .jsn import ObjectDecoder, ObjectEncoder, dump, dumps, load, loads, save
 from .obj import *
 from .utl import cdir, elapsed, spl
-from .wdr import Wd
+from .wdr import Wd, setwd
 
 
 def __dir__():
@@ -83,6 +83,7 @@ def __dir__():
             'otype',
             'register',
             'save',
+            'setwd',
             'spl',
             'update',
             'values',

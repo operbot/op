@@ -26,15 +26,18 @@ def fnd(args):
     if len(args) == 0:
         print("op workdir [type] [selector]")
         return
+    wd = args[0]
+    if not os.path.exists(wd):
+        print("%s is not a directory" % wd)
+        return
+    Wd.workdir = wd
     if len(args) == 1:
-        Wd.workdir = args[0]
         res = ",".join({x.split(".")[-1].lower() for x in Wd.types()})
         if res:
             print(res)
         else:
             print("no types yet.")
         return
-    Wd.workdir = args[0]
     otype = args[1]
     dbs = Db()
     res = list(allobj(otype))

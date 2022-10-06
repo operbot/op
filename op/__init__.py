@@ -2,10 +2,10 @@
 # pylint: disable=W0622,C0114
 
 
-"""object programming runtime
+"""object programming 
 
 
-The ``opr`` package provides an Object class, that mimics a dict while using
+The ``op`` package provides an Object class, that mimics a dict while using
 attribute access and provides a save/load to/from json files on disk.
 Objects can be searched with database functions and uses read-only files
 to improve persistence and a type in filename for reconstruction. Methods are
@@ -13,8 +13,8 @@ factored out into functions to have a clean namespace to read JSON data into.
 
 basic usage is this::
 
->>> import opr
->>> o = opr.Object()
+>>> import op
+>>> o = op.Object()
 >>> o.key = "value"
 >>> o.key
 >>> 'value'
@@ -26,7 +26,7 @@ and values.
 
 load/save from/to disk::
 
->>> from opr import Object, load, save
+>>> from op import Object, load, save
 >>> o = Object()
 >>> o.key = "value"
 >>> p = save(o)
@@ -37,26 +37,16 @@ load/save from/to disk::
 
 great for giving objects peristence by having their state stored in files::
 
- >>> from opr import Object, save
+ >>> from op import Object, save
  >>> o = Object()
  >>> save(o)
- 'opr.obj.Object/2021-08-31/15:31:05.717063'
+ 'op.obj.Object/2021-08-31/15:31:05.717063'
 
 """
 
 
-from .bus import Bus
-from .cbs import Callbacks
 from .cfg import Config
-from .clt import Client
-from .com import Command, dispatch
-from .evt import Event
-from .hdl import Handler
-from .prs import parse
-from .scn import scan, scandir
 from .thr import Thread, launch
-from .tmr import Timer, Repeater
-from .utl import wait
 from .cls import Class
 from .dbs import Db, all, find, fns, fntime, hook, last, locked
 from .dft import Default
@@ -68,25 +58,16 @@ from .wdr import Wd
 
 def __dir__():
     return (
-            'Bus',
-            'Callbacks',
             'Class',
-            'Client',
-            'Command',
             'Config',
             'Db',
             'Default',
-            'Event',
-            'Handler',
             'Object',
             'ObjectDecoder',
             'ObjectEncoder',
-            'Repeater',
             'Thread',
-            'Timer',
             'Wd',
             'all',
-            'dispatch',
             'delete',
             'dump',
             'dumps',
@@ -103,14 +84,9 @@ def __dir__():
             'locked',
             'name',
             'otype',
-            'parse',
             'register',
             'save',
-            'scan',
-            'scandir',
             'spl',
-            'starttime',
             'update',
             'values',
-            'wait'
            )

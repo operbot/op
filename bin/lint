@@ -8,7 +8,8 @@ import sys
 os.environ["PYTHONPATH"] = "."
 
 
-CMD = "pylint --disable=R,C,E1101,W0201,W0212,W0613 %s"
+#CMD = "pylint --disable=R,C,E1101,W0201,W0212,W0613 %s"
+CMD = "pylint %s"
 SKIP = ["Your code", "---"]
 TODO = ["op",]
 

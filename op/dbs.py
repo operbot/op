@@ -1,5 +1,5 @@
 # This file is placed in the Public Domain.
-# pylint: disable=W0622
+# pylint: disable=R,C,W
 
 
 "database"
@@ -8,10 +8,9 @@
 import _thread
 
 
-from .obj import get, items, otype, update
+from .obj import Object, get, items, otype, update
 from .cls import Class
 from .jsn import hook
-from .sel import Selector
 from .wdr import Wd
 from .utl import fns, fntime
 
@@ -22,6 +21,7 @@ dblock = _thread.allocate_lock()
 def __dir__():
     return (
             "Db",
+            'allobj',
             "find",
             "last",
             "search"
@@ -30,10 +30,14 @@ def __dir__():
 
 def locked(lock):
 
+    noargs = False
+
     def lockeddec(func, *args, **kwargs):
 
         def lockedfunc(*args, **kwargs):
             lock.acquire()
+            if args or kwargs:
+                locked.noargs = True
             res = None
             try:
                 res = func(*args, **kwargs)
@@ -97,7 +101,7 @@ class Db():
         return (None, None)
 
 
-def all(name, timed=None):
+def allobj(name, timed=None):
     names = Class.full(name)
     if not names:
         names = Wd.types(name)
@@ -130,7 +134,7 @@ def last(obj):
 
 def search(obj, selector):
     res = False
-    select = Selector(selector)
+    select = Object(selector)
     for key, value in items(select):
         val = get(obj, key)
         if str(value) in str(val):

@@ -1,6 +1,5 @@
 # This file is placed in the Public Domain.
-# pylint: disable=W0622,C0114
-
+# pylint: disable=R,C
 
 """object programming 
 
@@ -45,10 +44,9 @@ great for giving objects peristence by having their state stored in files::
 """
 
 
-from .cfg import Config
 from .thr import Thread, launch
 from .cls import Class
-from .dbs import Db, all, find, fns, fntime, hook, last, locked
+from .dbs import Db, allobj, find, fns, fntime, hook, last, locked
 from .dft import Default
 from .jsn import ObjectDecoder, ObjectEncoder, dump, dumps, load, loads, save
 from .obj import *
@@ -59,7 +57,6 @@ from .wdr import Wd
 def __dir__():
     return (
             'Class',
-            'Config',
             'Db',
             'Default',
             'Object',
@@ -67,7 +64,7 @@ def __dir__():
             'ObjectEncoder',
             'Thread',
             'Wd',
-            'all',
+            'allobj',
             'delete',
             'dump',
             'dumps',

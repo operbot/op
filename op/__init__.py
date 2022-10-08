@@ -55,6 +55,17 @@ from .utl import cdir, elapsed, spl
 from .wdr import Wd, setwd
 
 
+from op import cls
+from op import dbs
+from op import dft
+from op import fnc
+from op import jsn
+from op import obj
+from op import thr
+from op import utl
+from op import wdr
+
+
 def __dir__():
     return (
             'Class',
@@ -66,14 +77,19 @@ def __dir__():
             'Thread',
             'Wd',
             'allobj',
+            'cls',
+            'dbs',
             'delete',
+            'dft',
             'dump',
             'dumps',
             'edit',
             'find',
+            'fnc',
             'format',
             'get',
             'items',
+            'jsn',
             'keys',
             'launch',
             'last',
@@ -81,11 +97,15 @@ def __dir__():
             'loads',
             'locked',
             'name',
+            'obj',
             'type',
             'register',
             'save',
             'setwd',
             'spl',
+            'thr',
             'update',
+            'utl',
             'values',
+            'wdr'
            )

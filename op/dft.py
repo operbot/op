@@ -2,6 +2,9 @@
 # pylint: disable=R,C
 
 
+"default"
+
+
 from .obj import Object
 
 

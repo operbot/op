@@ -2,7 +2,7 @@
 # pylint: disable=R,C
 
 
-"utiltity"
+"utility"
 
 
 import os

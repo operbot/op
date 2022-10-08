@@ -2,7 +2,7 @@
 # pylint: disable=R,C,W
 
 
-"funtions"
+"funtion"
 
 
 import types

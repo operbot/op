@@ -2,7 +2,7 @@
 # pylint: disable=R,C,W
 
 
-"object"
+"Object"
 
 
 import types

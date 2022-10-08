@@ -12,8 +12,8 @@ def read():
 
 
 setup(
-    name="op",
-    version="500",
+    name="objectprogramming",
+    version="100",
     author="Bart Thate",
     author_email="operbot100@gmail.com",
     url="http://github.com/operbot/op",

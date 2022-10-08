@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+# This file is placed in the Public Domain.
+
+
+"object programming shell"
+
+
+import importlib
+import inspect
+import os
+import readline
+import signal
+import sys
+import termios
+import threading
+import time
+
+
+starttime = time.time()
+
+
+from op import Class, Db, Event, Handler, Object, Wd
+from op import allobj, elapsed, keys, fntime, format, launch
+from op import register, find, save, scan, scandir, update
+from op.run import from_exception 
+
+
+Wd.workdir = os.path.expanduser("~/.op")
+
+
+class CLI(Handler):
+
+    @staticmethod
+    def raw(txt):
+        print(txt)
+
+
+def importer(packagename, modulename):
+    name = "%s.%s" % (packagename, modulename)
+    try:
+        mod = importlib.import_module(name, packagename)
+        scan(mod)
+    except Exception as ex:
+        print(from_exception(ex))
+
+
+def main():
+    scandir("cmds", importer)
+    evt = Event()
+    evt.parse(" ".join(sys.argv[1:]))
+    CLI.handle(evt)
+    evt.wait()
+
+ 
+if __name__ == "__main__":
+    main()

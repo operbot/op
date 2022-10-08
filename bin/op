@@ -16,7 +16,7 @@ import time
 starttime = time.time()
 
 
-from op import Db, Wd, allobj, elapsed, keys, fntime, printable
+from op import Db, Wd, allobj, elapsed, keys, fntime, format
 
 
 Wd.workdir = os.path.expanduser("~/.op")
@@ -45,7 +45,7 @@ def fnd(args):
     for _fn, obj in res:
         txt = "%s %s %s" % (
                             str(_nr),
-                            printable(obj, keys(obj)),
+                            format(obj, keys(obj)),
                             elapsed(time.time()-fntime(_fn))
                            )
         _nr += 1

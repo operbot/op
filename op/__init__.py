@@ -4,11 +4,11 @@
 """object programming 
 
 
-The ``op`` package provides an Object class, that mimics a dict while using
-attribute access and provides a save/load to/from json files on disk.
-Objects can be searched with database functions and uses read-only files
-to improve persistence and a type in filename for reconstruction. Methods are
-factored out into functions to have a clean namespace to read JSON data into.
+The ``op`` package provides an Object class, that allows for save/load to/from
+json files on disk. Objects can be searched with database functions and uses
+read-only files to improve persistence and a type in filename for
+reconstruction. Methods are factored out into functions to have a clean
+namespace to read JSON data into.
 
 basic usage is this::
 
@@ -48,6 +48,7 @@ from .thr import Thread, launch
 from .cls import Class
 from .dbs import Db, allobj, find, fns, fntime, hook, last, locked
 from .dft import Default
+from .fnc import *
 from .jsn import ObjectDecoder, ObjectEncoder, dump, dumps, load, loads, save
 from .obj import *
 from .utl import cdir, elapsed, spl
@@ -80,7 +81,7 @@ def __dir__():
             'loads',
             'locked',
             'name',
-            'otype',
+            'type',
             'register',
             'save',
             'setwd',

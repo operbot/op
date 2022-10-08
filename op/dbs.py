@@ -8,7 +8,7 @@
 import _thread
 
 
-from .obj import Object, get, items, otype, update
+from .obj import Object, items, kind, update
 from .cls import Class
 from .jsn import hook
 from .wdr import Wd
@@ -127,7 +127,7 @@ def find(name, selector=None, index=None, timed=None):
 
 def last(obj):
     dbs = Db()
-    _path, _obj = dbs.last(otype(obj))
+    _path, _obj = dbs.last(kind(obj))
     if _obj:
         update(obj, _obj)
 
@@ -136,7 +136,7 @@ def search(obj, selector):
     res = False
     select = Object(selector)
     for key, value in items(select):
-        val = get(obj, key)
+        val = getattr(obj, key)
         if str(value) in str(val):
             res = True
             break

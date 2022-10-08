@@ -7,6 +7,7 @@
 
 import datetime
 import json
+import op
 import os
 
 
@@ -14,7 +15,7 @@ from json import JSONDecoder, JSONEncoder
 
 
 from .cls import Class
-from .obj import Object, otype, update
+from .obj import Object, update
 from .utl import cdir, fnclass
 from .wdr import Wd
 
@@ -112,7 +113,7 @@ def loads(jss):
 
 def save(obj):
     stp = os.path.join(
-                       otype(obj),
+                       op.type(obj),
                        os.sep.join(str(datetime.datetime.now()).split())
                       )
     opath = Wd.getpath(stp)

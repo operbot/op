@@ -1,0 +1,222 @@
+#!/usr/bin/env python3
+# This file is placed in the Public Domain.
+
+
+"object programming shell"
+
+
+import os
+import readline
+import signal
+import sys
+import termios
+import threading
+import time
+
+
+starttime = time.time()
+
+
+from op import Db, Object, Wd, allobj, elapsed, keys, fntime, format, launch
+from op import register, find, save, update
+
+
+Wd.workdir = os.path.expanduser("~/.op")
+
+
+class CLI(Object):
+
+    @staticmethod
+    def raw(txt):
+        print(txt)
+
+
+class Event(Object):
+
+
+    def __init__(self, *args, **kwargs):
+        Object.__init__(self, *args, **kwargs)
+        self.__ready__ = threading.Event()
+        self.args = []
+        self.result = []
+        self.rest = ""
+        self.txt = ""
+
+    def ready(self):
+        self.__ready__.set()
+
+    def reply(self, txt):
+        self.result.append(txt)
+
+    def show(self):
+        for txt in self.result:
+            print(txt)
+
+    def wait(self):
+        self.ready.wait()
+
+
+class Log(Object):
+
+    def __init__(self):
+        super().__init__()
+        self.txt = ""
+
+
+class Shell(CLI):
+
+    cmd = Object()
+
+    @staticmethod
+    def announce(txt):
+        pass
+
+    def handle(self, event):
+        try:
+            func = getattr(self.cmd, event.cmd)
+        except AttributeError:
+            func = None
+        if func:
+            func(event)
+            event.show()
+        event.ready()
+
+    def poll(self):
+        event = Event()
+        event.txt = input("> ")
+        splitted = event.txt.split()
+        if splitted:
+             event.cmd = splitted[0]
+        if len(splitted) > 1:
+             event.args = splitted[1:]
+             event.rest = " ".join(event.args)
+        event.orig = repr(self)
+        return event
+
+    def loop(self):
+        while 1:
+            self.handle(self.poll())
+
+    def register(self, cmd):
+        setattr(self.cmd, cmd.__name__, cmd)
+
+    def start(self):
+        launch(self.loop)
+
+    def wait(self):
+        while 1:
+            time.sleep(1.0)
+
+
+class Todo(Object):
+
+    def __init__(self):
+        super().__init__()
+        self.txt = ""
+
+
+def cmd(event):
+    event.reply(",".join(sorted(Shell.cmd)))
+
+
+def dne(event):
+    if not event.args:
+        return
+    selector = {"txt": event.args[0]}
+    for _fn, obj in find("todo", selector):
+        obj.__deleted__ = True
+        save(obj)
+        event.reply("ok")
+        break
+
+
+def log(event):
+    if not event.rest:
+        _nr = 0
+        for _fn, obj in find("log"):
+            event.reply("%s %s %s" % (
+                                      _nr,
+                                      obj.txt,
+                                      elapsed(time.time() - fntime(_fn)))
+                                     )
+            _nr += 1
+        return
+    obj = Log()
+    obj.txt = event.rest
+    save(obj)
+    event.reply("ok")
+
+
+def tdo(event):
+    if not event.rest:
+        nmr = 0
+        for _fn, obj in find("todo"):
+            event.reply("%s %s %s" % (
+                                      nmr,
+                                      obj.txt,
+                                      elapsed(time.time() - fntime(_fn)))
+                                     )
+            nmr += 1
+        return
+    obj = Todo()
+    obj.txt = event.rest
+    save(obj)
+    event.reply("ok")
+
+
+def thr(event):
+    result = []
+    for thread in sorted(threading.enumerate(), key=lambda x: x.getName()):
+        if str(thread).startswith("<_"):
+            continue
+        obj = Object()
+        update(obj, vars(thread))
+        if getattr(obj, "sleep", None):
+            uptime = obj.sleep - int(time.time() - obj.state.latest)
+        else:
+            uptime = int(time.time() - obj.starttime)
+        result.append((uptime, thread.getName()))
+    res = []
+    for uptime, txt in sorted(result, key=lambda x: x[0]):
+        res.append("%s/%s" % (txt, elapsed(uptime)))
+    if res:
+        event.reply(" ".join(res))
+    else:
+        event.reply("no threads running")
+
+
+def upt(event):
+    event.reply(elapsed(time.time()-starttime))
+
+
+def wrap(func):
+    fds = sys.stdin.fileno()
+    gotterm = True
+    try:
+        old = termios.tcgetattr(fds)
+    except termios.error:
+        gotterm = False
+    readline.redisplay()
+    try:
+        func()
+    except (EOFError, KeyboardInterrupt):
+        print("")
+    finally:
+        if gotterm:
+            termios.tcsetattr(fds, termios.TCSADRAIN, old)
+
+
+def main():
+    shell = Shell()
+    shell.register(cmd)
+    shell.register(dne)
+    shell.register(log)
+    shell.register(tdo)
+    shell.register(thr)
+    shell.register(upt)
+    shell.start()
+    shell.wait()
+
+ 
+if __name__ == "__main__":
+    wrap(main)

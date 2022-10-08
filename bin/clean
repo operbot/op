@@ -17,3 +17,4 @@ popen("rm -fR build dist MANIFEST *~ .op objectprogramming.egg-info __pycache__ 
 popen("rm -fR bin/*~")
 popen("rm -fR .test test/*~ test/__pycache__")
 popen("rm -fR op/*~ op/__pycache__")
+popen("rm -fR mod/*~ mod/__pycache__")

@@ -45,7 +45,7 @@ def importer(packagename, modulename):
 
 
 def main():
-    scandir("cmds", importer)
+    scandir("mod", importer)
     evt = Event()
     evt.parse(" ".join(sys.argv[1:]))
     CLI.handle(evt)

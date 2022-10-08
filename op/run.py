@@ -15,6 +15,66 @@ from .obj import Object
 from .fnc import name
 
 
+class Bus(Object):
+
+    objs = []
+    
+    @staticmethod
+    def add(obj):
+        if repr(obj) not in [repr(x) for x in Bus.objs]:
+            Bus.objs.append(obj)
+
+    @staticmethod
+    def byorig(orig):
+        res = None
+        for obj in Bus.objs:
+            if repr(obj) == orig:
+                res = obj
+                break
+        return res
+
+
+class Handler(Object):
+
+    cmd = Object()
+
+    def __init__(self):
+        Object.__init__(self)
+        Bus.add(self)
+ 
+    @staticmethod
+    def announce(txt):
+        pass
+
+    @staticmethod
+    def handle(event):
+        event.parse()
+        try:
+            func = getattr(Handler.cmd, event.cmd)
+        except AttributeError:
+            func = None
+        if func:
+            func(event)
+            event.show()
+        event.ready()
+
+    @staticmethod
+    def raw(txt):
+        print(txt)
+
+    @staticmethod
+    def register(cmd):
+        setattr(Handler.cmd, cmd.__name__, cmd)
+
+    @staticmethod
+    def scan(mod):
+        for _k, clz in inspect.getmembers(mod, inspect.isclass):
+            Class.add(clz)
+        for _k, cmd in inspect.getmembers(mod, inspect.isfunction):
+            if "event" in cmd.__code__.co_varnames:
+                Handler.register(cmd)
+
+
 class Event(Object):
 
     def __init__(self, *args, **kwargs):
@@ -48,43 +108,6 @@ class Event(Object):
 
     def wait(self):
         self.__ready__.wait()
-
-
-class Handler(Object):
-
-    cmd = Object()
-
-    @staticmethod
-    def announce(txt):
-        pass
-
-    @staticmethod
-    def handle(event):
-        event.parse()
-        try:
-            func = getattr(Handler.cmd, event.cmd)
-        except AttributeError:
-            func = None
-        if func:
-            func(event)
-            event.show()
-        event.ready()
-
-    @staticmethod
-    def raw(txt):
-        print(txt)
-
-    @staticmethod
-    def register(cmd):
-        setattr(Handler.cmd, cmd.__name__, cmd)
-
-    @staticmethod
-    def scan(mod):
-        for _k, clz in inspect.getmembers(mod, inspect.isclass):
-            Class.add(clz)
-        for _k, cmd in inspect.getmembers(mod, inspect.isfunction):
-            if "event" in cmd.__code__.co_varnames:
-                Handler.register(cmd)
 
 
 def from_exception(exc, txt="", sep=" "):

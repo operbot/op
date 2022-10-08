@@ -15,7 +15,7 @@ from json import JSONDecoder, JSONEncoder
 
 
 from .cls import Class
-from .obj import Object, update
+from .obj import Object, kind, update
 from .utl import cdir, fnclass
 from .wdr import Wd
 
@@ -113,7 +113,7 @@ def loads(jss):
 
 def save(obj):
     stp = os.path.join(
-                       op.type(obj),
+                       kind(obj),
                        os.sep.join(str(datetime.datetime.now()).split())
                       )
     opath = Wd.getpath(stp)

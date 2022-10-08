@@ -5,14 +5,15 @@
 
 
 import json
+import op
 import os
 import unittest
 
 
-from op import Object, get, items, keys, register, update, values
-from op import load, otype, save
-from op import edit, printable
-from op import ObjectDecoder, ObjectEncoder
+from op import Object, items, keys, register, update, values
+from op import load, kind, save
+from op import edit
+from op import ObjectDecoder, ObjectEncoder, dumps, loads
 from op import Wd
 
 
@@ -28,7 +29,6 @@ attrs1 = (
          'clear',
          'copy',
          'fromkeys',
-         'get',
          'items',
          'keys',
          'matchkey',
@@ -71,14 +71,6 @@ attrs2 = (
           '__subclasshook__',
           '__weakref__'
          )
-
-
-def dumps(name):
-    return json.dumps(name, cls=ObjectEncoder)
-
-
-def loads(name):
-    return json.loads(name, cls=ObjectDecoder)
 
 
 class TestObject(unittest.TestCase):
@@ -152,8 +144,8 @@ class TestObject(unittest.TestCase):
     def test_module(self):
         self.assertTrue(Object().__module__, "op")
 
-    def test_otype(self):
-        self.assertEqual(otype(Object()), "op.obj.Object")
+    def test_kind(self):
+        self.assertEqual(kind(Object()), "op.obj.Object")
 
     def test_repr(self):
         self.assertTrue(update(Object(),
@@ -177,14 +169,14 @@ class TestObject(unittest.TestCase):
         edit(obj, dta)
         self.assertEqual(obj.key, "value")
 
-    def test_printable(self):
+    def test_opformat(self):
         obj = Object()
-        self.assertEqual(printable(obj), "")
+        self.assertEqual(op.format(obj), "")
 
-    def test_get(self):
+    def test_getattr(self):
         obj = Object()
         obj.key = "value"
-        self.assertEqual(get(obj, "key"), "value")
+        self.assertEqual(getattr(obj, "key"), "value")
 
     def test_keys(self):
         obj = Object()

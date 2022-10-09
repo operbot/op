@@ -1,34 +1,24 @@
 #!/usr/bin/env python3
 # This file is placed in the Public Domain.
+# pylint: disable=C0115,C0116
 
 
 "object programming shell"
 
 
 import importlib
-import inspect
 import os
-import readline
-import signal
 import sys
-import termios
-import threading
 import time
 
 
-sys.path.insert(0, os.getcwd())
-
-
-starttime = time.time()
-
-
-from op import Class, Db, Event, Handler, Object, Wd
-from op import allobj, elapsed, keys, fntime, format, launch
-from op import register, find, save, scandir, update
-from op.run import from_exception 
+from op import Event, Handler, Wd, scandir
 
 
 Wd.workdir = os.path.expanduser("~/.op")
+
+
+starttime = time.time()
 
 
 class CLI(Handler):
@@ -46,8 +36,8 @@ def importer(packagename, modulename):
     try:
         mod = importlib.import_module(name, packagename)
         cli.scan(mod)
-    except Exception as ex:
-        print(from_exception(ex))
+    except ModuleNotFoundError:
+        pass
 
 
 def main():
@@ -57,6 +47,6 @@ def main():
     cli.handle(evt)
     evt.wait()
 
- 
+
 if __name__ == "__main__":
     main()

@@ -1,34 +1,25 @@
 #!/usr/bin/env python3
 # This file is placed in the Public Domain.
+# pylint: disable=C0115,C0116,R0201
 
 
 "object programming shell"
 
 
 import importlib
-import inspect
 import os
-import readline
-import signal
-import sys
-import termios
-import threading
 import time
 
 
-sys.path.insert(0, os.getcwd())
-
-
-starttime = time.time()
-
-
-from op import Class, Db, Event, Handler, Object, Wd
-from op import allobj, elapsed, keys, fntime, format, launch
-from op import register, find, save, scandir, update
-from op.run import from_exception 
+from op import Event, Handler, Wd
+from op import launch
+from op import scandir
 
 
 Wd.workdir = os.path.expanduser("~/.op")
+
+
+starttime = time.time()
 
 
 class Shell(Handler):
@@ -44,8 +35,7 @@ class Shell(Handler):
         event.orig = repr(self)
         return event
 
-    @staticmethod
-    def raw(txt):
+    def raw(self, txt):
         print(txt)
 
     def start(self):
@@ -64,8 +54,8 @@ def importer(packagename, modulename):
     try:
         mod = importlib.import_module(name, packagename)
         shl.scan(mod)
-    except Exception as ex:
-        print(from_exception(ex))
+    except ModuleNotFoundError:
+        pass
 
 
 def main():
@@ -73,6 +63,6 @@ def main():
     shl.start()
     shl.wait()
 
- 
+
 if __name__ == "__main__":
     main()

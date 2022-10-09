@@ -14,7 +14,7 @@ from .obj import keys, register
 def __dir__():
     return (
             'name',
-            'format',
+            'printable',
            )
 
 
@@ -24,7 +24,7 @@ def edit(obj, setter):
         register(obj, key, value)
 
 
-def format(obj, args="", skip="", plain=False):
+def printable(obj, args="", skip="", plain=False):
     res = []
     keyz = []
     if "," in args:

@@ -1,39 +1,34 @@
 #!/usr/bin/env python3
 # This file is placed in the Public Domain.
-
+# pylint: disable=C0116,W0611
 
 "object programming"
 
 
 import os
 import readline
-import signal
 import sys
-import termios
 import time
 
 
-sys.path.insert(0, os.getcwd())
-
-
-starttime = time.time()
-
-
-from op import Db, Wd, allobj, elapsed, keys, fntime, format
+from op import Wd, allobj, elapsed, keys, fntime, printable
 
 
 Wd.workdir = os.path.expanduser("~/.op")
+
+
+starttime = time.time()
 
 
 def fnd(args):
     if len(args) == 0:
         print("op workdir [type] [selector]")
         return
-    wd = args[0]
-    if not os.path.exists(wd):
-        print("%s is not a directory" % wd)
+    wdr = args[0]
+    if not os.path.exists(wdr):
+        print("%s is not a directory" % wdr)
         return
-    Wd.workdir = wd
+    Wd.workdir = wdr
     if len(args) == 1:
         res = ",".join({x.split(".")[-1].lower() for x in Wd.types()})
         if res:
@@ -42,13 +37,12 @@ def fnd(args):
             print("no types yet.")
         return
     otype = args[1]
-    dbs = Db()
     res = list(allobj(otype))
     _nr = 0
     for _fn, obj in res:
         txt = "%s %s %s" % (
                             str(_nr),
-                            format(obj, keys(obj)),
+                            printable(obj, keys(obj)),
                             elapsed(time.time()-fntime(_fn))
                            )
         _nr += 1

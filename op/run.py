@@ -42,15 +42,14 @@ class Handler(Object):
         Object.__init__(self)
         Bus.add(self)
  
-    @staticmethod
-    def announce(txt):
+    def announce(self, txt):
         pass
 
-    @staticmethod
-    def handle(event):
+    def handle(self, event):
         event.parse()
+        event.orig = repr(self)
         try:
-            func = getattr(Handler.cmd, event.cmd)
+            func = getattr(self.cmd, event.cmd)
         except AttributeError:
             func = None
         if func:
@@ -58,21 +57,18 @@ class Handler(Object):
             event.show()
         event.ready()
 
-    @staticmethod
-    def raw(txt):
-        print(txt)
+    def raw(self, txt):
+        pass
 
-    @staticmethod
-    def register(cmd):
-        setattr(Handler.cmd, cmd.__name__, cmd)
+    def register(self, cmd):
+        setattr(self.cmd, cmd.__name__, cmd)
 
-    @staticmethod
-    def scan(mod):
+    def scan(self, mod):
         for _k, clz in inspect.getmembers(mod, inspect.isclass):
             Class.add(clz)
         for _k, cmd in inspect.getmembers(mod, inspect.isfunction):
             if "event" in cmd.__code__.co_varnames:
-                Handler.register(cmd)
+                self.register(cmd)
 
 
 class Event(Object):
@@ -116,13 +112,6 @@ def from_exception(exc, txt="", sep=" "):
         result.append("%s:%s" % (os.sep.join(frm.filename.split(os.sep)[-2:]), frm.lineno))
     return "%s %s: %s" % (" ".join(result), name(exc), exc, )
 
-
-def scan(mod):
-    for _k, clz in inspect.getmembers(mod, inspect.isclass):
-        Class.add(clz)
-    for _k, cmd in inspect.getmembers(mod, inspect.isfunction):
-        if "event" in cmd.__code__.co_varnames:
-            Handler.register(cmd)
 
 def scandir(path, func):
     res = []

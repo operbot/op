@@ -4,11 +4,11 @@
 """object programming 
 
 
-The ``op`` package provides an Object class, that allows for save/load to/from
-json files on disk. Objects can be searched with database functions and uses
-read-only files to improve persistence and a type in filename for
-reconstruction. Methods are factored out into functions to have a clean
-namespace to read JSON data into.
+The ``op`` package provides an Object class, that allows for save/load
+to/from json files on disk. Objects can be searched with database
+functions and uses read-only files to improve persistence and a type in
+filename for reconstruction. Methods are factored out into functions to
+have a clean namespace to read JSON data into.
 
 basic usage is this::
 

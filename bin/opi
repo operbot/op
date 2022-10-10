@@ -3,7 +3,7 @@
 # pylint: disable=C0115,C0116,R0201
 
 
-"object programming irc bot demo"
+"object programming irc"
 
 
 import importlib
@@ -100,7 +100,7 @@ class TextWrap(textwrap.TextWrapper):
 
 class Output(Object):
 
-    cache = Object()
+    cache = {}
 
     def __init__(self):
         Object.__init__(self)
@@ -184,19 +184,31 @@ class IRC(Handler, Output):
         self.state.pongcheck = False
         self.threaded = False
         self.zelf = ""
-        self.register("903", cb_h903)
-        self.register("904", cb_h903)
-        self.register("AUTHENTICATE", cb_auth)
-        self.register("CAP", cb_cap)
-        self.register("ERROR", cb_error)
-        self.register("LOG", cb_log)
-        self.register("NOTICE", cb_notice)
-        self.register("PRIVMSG", cb_privmsg)
-        self.register("QUIT", cb_quit)
+        self.register("903", self.h903)
+        self.register("904", self.h903)
+        self.register("AUTHENTICATE", self.auth)
+        self.register("CAP", self.cap)
+        self.register("ERROR", self.error)
+        self.register("LOG", self.log)
+        self.register("NOTICE", self.notice)
+        self.register("PRIVMSG", self.privmsg)
+        self.register("QUIT", self.quit)
 
     def announce(self, txt):
         for channel in self.channels:
             self.say(channel, txt)
+
+    def auth(self, event):
+        time.sleep(1.0)
+        self.raw("AUTHENTICATE %s" % bot.cfg.password)
+
+    def cap(self, event):
+        time.sleep(1.0)
+        if self.cfg.password and "ACK" in event.arguments:
+            self.raw("AUTHENTICATE PLAIN")
+        else:
+            self.raw("CAP REQ :sasl")
+
 
     @locked(saylock)
     def command(self, cmd, *args):
@@ -258,6 +270,14 @@ class IRC(Handler, Output):
         txt = txt.replace("  ", " ")
         self.command("PRIVMSG", channel, txt)
 
+
+    def error(self, event):
+        self.state.nrerror += 1
+        self.state.error = event.txt
+        self.stop()
+
+
+
     def event(self, txt):
         evt = self.parsing(txt)
         cmd = evt.command
@@ -285,6 +305,17 @@ class IRC(Handler, Output):
 
     def fileno(self):
         return self.sock.fileno()
+
+    def h903(self, event):
+        time.sleep(1.0)
+        elf.raw("CAP END")
+
+
+    def h904(self, event):
+        time.sleep(1.0)
+        self.raw("CAP END")
+
+
 
     def joinall(self):
         for channel in self.channels:
@@ -314,6 +345,39 @@ class IRC(Handler, Output):
                  server,
                  self.cfg.realname)
                 )
+
+    def kill(self, event):
+        pass
+
+    def log(self, event):
+        pass
+
+    def notice(self, event):
+        if event.txt.startswith("VERSION"):
+            txt = "\001VERSION %s %s - %s\001" % (
+                "op",
+                self.cfg.version,
+                self.cfg.username,
+            )
+            self.command("NOTICE", event.channel, txt)
+
+    def privmsg(self, event):
+        if event.txt:
+            if event.txt[0] in [self.cfg.control, "!"]:
+                event.txt = event.txt[1:]
+            elif event.txt.startswith("%s:" % self.cfg.nick):
+                event.txt = event.txt[len(self.cfg.nick)+1:]
+            else:
+                return
+            if self.cfg.users and not Users.allowed(event.origin, "USER"):
+                return
+            splitted = event.txt.split()
+            splitted[0] = splitted[0].lower()
+            event.txt = " ".join(splitted)
+            event.type = "event"
+            event.orig = repr(self)
+            event.parse()
+            shl.handle(event)
 
     def register(self, cbs, func):
         register(self.cbs, cbs, func)
@@ -390,6 +454,10 @@ class IRC(Handler, Output):
                 return evt
         return self.event(self.buffer.pop(0))
 
+    def quit(self, event):
+        if event.orig and event.orig in self.zelf:
+            self.reconnect()
+
     def raw(self, txt):
         txt = txt.rstrip()
         if not txt.endswith("\r\n"):
@@ -457,7 +525,6 @@ class IRC(Handler, Output):
         except OSError:
             pass
         Handler.stop(self)
-        #Output.stop(self)
 
     def wait(self):
         self.joined.wait()
@@ -521,78 +588,6 @@ class Users(Object):
             user.perms.append(permission.upper())
             save(user)
         return user
-
-
-def cb_auth(bot, event):
-    time.sleep(1.0)
-    bot.raw("AUTHENTICATE %s" % bot.cfg.password)
-
-
-def cb_cap(bot, event):
-    time.sleep(1.0)
-    if bot.cfg.password and "ACK" in event.arguments:
-        bot.raw("AUTHENTICATE PLAIN")
-    else:
-        bot.raw("CAP REQ :sasl")
-
-
-def cb_h903(bot, event):
-    time.sleep(1.0)
-    bot.raw("CAP END")
-
-
-def cb_h904(bot, event):
-    time.sleep(1.0)
-    bot.raw("CAP END")
-
-
-def cb_error(bot, event):
-    bot = event.bot()
-    bot.state.nrerror += 1
-    #bot.state.error = event.txt
-    bot.stop()
-
-
-def cb_kill(bot, event):
-    pass
-
-
-def cb_log(bot, event):
-    pass
-
-
-def cb_notice(bot, event):
-    if event.txt.startswith("VERSION"):
-        txt = "\001VERSION %s %s - %s\001" % (
-            "op",
-            bot.cfg.version,
-            bot.cfg.username,
-        )
-        bot.command("NOTICE", event.channel, txt)
-
-
-def cb_privmsg(bot, event):
-    event.parse()
-    if event.txt:
-        if event.txt[0] in [bot.cfg.cc, "!"]:
-            event.txt = event.txt[1:]
-        elif event.txt.startswith("%s:" % bot.cfg.nick):
-            event.txt = event.txt[len(bot.cfg.nick)+1:]
-        else:
-            return
-        if bot.cfg.users and not Users.allowed(event.origin, "USER"):
-            return
-        splitted = event.txt.split()
-        splitted[0] = splitted[0].lower()
-        event.txt = " ".join(splitted)
-        event.type = "event"
-        event.orig = repr(bot)
-        shl.put(event)
-
-
-def cb_quit(bot, event):
-    if event.orig and event.orig in bot.zelf:
-        bot.reconnect()
 
 
 def cfg(event):

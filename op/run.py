@@ -22,13 +22,13 @@ from .thr import launch
 Cfg = Default()
 
 
-def handle(bot, event):
-    event.parse()
-    func = getattr(bot, event.cmd, None)
+def handle(evt):
+    evt.parse()
+    func = getattr(Command.cmd, evt.cmd, None)
     if func:
-        func(event)
-        event.show()
-    event.ready()
+        func(evt)
+        evt.show()
+    evt.ready()
 
 
 class Bus(Object):
@@ -49,6 +49,12 @@ class Bus(Object):
                 break
         return res
 
+    @staticmethod
+    def say(orig, channel, txt):
+        bot = Bus.byorig(orig)
+        if bot:
+            bot.say(channel, txt)
+
 
 class Callbacks(Object):
 
@@ -63,7 +69,7 @@ class Callbacks(Object):
         if not func:
             event.ready()
             return
-        func(self, event)
+        func(event)
 
     def dispatch(self, event):
         self.callback(event)
@@ -95,6 +101,7 @@ class Event(Object):
         Object.__init__(self, *args, **kwargs)
         self.__ready__ = threading.Event()
         self.args = []
+        self.channel = ""
         self.cmd = ""
         self.orig = ""
         self.result = []
@@ -131,7 +138,7 @@ class Event(Object):
 
     def show(self):
         for txt in self.result:
-            print(txt)
+            Bus.say(self.orig, self.channel, txt)
 
     def wait(self):
         self.__ready__.wait()
@@ -182,7 +189,6 @@ class Shell(Handler):
 
     def poll(self):
         event = Event()
-        event.bot = self
         event.txt = input("> ")
         event.orig = repr(self)
         return event

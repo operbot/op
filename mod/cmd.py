@@ -34,8 +34,7 @@ Class.add(Todo)
 
 
 def cmd(event):
-    bot = Bus.byorig(event.orig)
-    event.reply(",".join(sorted(bot.cmd)))
+    event.reply(",".join(sorted(Command.cmd)))
 
 
 Command.add(cmd)

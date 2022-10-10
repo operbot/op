@@ -50,7 +50,6 @@ from .dft import Default
 from .fnc import *
 from .jsn import ObjectDecoder, ObjectEncoder, dump, dumps, load, loads, save
 from .obj import *
-from .run import Event, Handler, Shell, scan, scandir
 from .thr import Thread, launch
 from .utl import cdir, elapsed, locked, spl
 from .wdr import Wd, setwd
@@ -72,12 +71,9 @@ def __dir__():
             'Class',
             'Db',
             'Default',
-            'Event',
-            'Handler',
             'Object',
             'ObjectDecoder',
             'ObjectEncoder',
-            'Shell',
             'Thread',
             'Wd',
             'allobj',

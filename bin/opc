@@ -12,7 +12,8 @@ import sys
 import time
 
 
-from op import Event, Handler, Wd, scandir
+from op import Wd
+from op.run import Bus, Event, Handler, scan, scandir
 
 
 Wd.workdir = os.path.expanduser("~/.op")
@@ -35,7 +36,7 @@ def importer(packagename, modulename):
     name = "%s.%s" % (packagename, modulename)
     try:
         mod = importlib.import_module(name, packagename)
-        cli.scan(mod)
+        scan(cli, mod)
     except ModuleNotFoundError:
         pass
 
@@ -46,7 +47,6 @@ def main():
     evt.parse(" ".join(sys.argv[1:]))
     cli.handle(evt)
     evt.wait()
-
 
 if __name__ == "__main__":
     main()

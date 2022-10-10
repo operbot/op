@@ -9,7 +9,7 @@ import time
 
 
 from op import Class, Object, elapsed, find, fntime, save, update
-from op.run import Bus
+from op.run import Bus, Command
 
 
 starttime = time.time()
@@ -34,10 +34,11 @@ Class.add(Todo)
 
 
 def cmd(event):
-    print(event)
     cli = Bus.byorig(event.orig)
-    print(type(cli))
     event.reply(",".join(sorted(cli.cmd)))
+
+
+Command.add(cmd)
 
 
 def dne(event):
@@ -49,6 +50,9 @@ def dne(event):
         save(obj)
         event.reply("ok")
         break
+
+
+Command.add(dne)
 
 
 def log(event):
@@ -68,6 +72,9 @@ def log(event):
     event.reply("ok")
 
 
+Command.add(log)
+
+
 def tdo(event):
     if not event.rest:
         nmr = 0
@@ -83,6 +90,9 @@ def tdo(event):
     obj.txt = event.rest
     save(obj)
     event.reply("ok")
+
+
+Command.add(tdo)
 
 
 def thr(event):
@@ -106,6 +116,11 @@ def thr(event):
         event.reply("no threads running")
 
 
+Command.add(thr)
+
+
 def upt(event):
     event.reply(elapsed(time.time()-starttime))
 
+
+Command.add(upt)

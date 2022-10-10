@@ -8,12 +8,14 @@
 
 import importlib
 import os
+import readline
+import sys
+import termios
 import time
 
 
-from op import Event, Handler, Wd
-from op import launch
-from op import scandir
+from op import Wd, launch
+from op.run import Event, Handler, scan, scandir
 
 
 Wd.workdir = os.path.expanduser("~/.op")
@@ -49,13 +51,32 @@ class Shell(Handler):
 shl = Shell()
 
 
+
+
 def importer(packagename, modulename):
     name = "%s.%s" % (packagename, modulename)
     try:
         mod = importlib.import_module(name, packagename)
-        shl.scan(mod)
+        scan(shl, mod)
     except ModuleNotFoundError:
         pass
+
+
+def wrap(func):
+    fds = sys.stdin.fileno()
+    gotterm = True
+    try:
+        old = termios.tcgetattr(fds)
+    except termios.error:
+        gotterm = False
+    readline.redisplay()
+    try:
+        func()
+    except (EOFError, KeyboardInterrupt):
+        print("")
+    finally:
+        if gotterm:
+            termios.tcsetattr(fds, termios.TCSADRAIN, old)
 
 
 def main():
@@ -65,4 +86,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    wrap(main)

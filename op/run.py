@@ -16,7 +16,6 @@ from .cls import Class
 from .dft import Default
 from .obj import Object, register
 from .fnc import edit, name
-from .tbl import Bus, Command
 from .thr import launch
 
 
@@ -32,26 +31,66 @@ def handle(evt):
     evt.ready()
 
 
+class Bus(Object):
+
+    objs = []
+
+    @staticmethod
+    def add(obj):
+        if repr(obj) not in [repr(x) for x in Bus.objs]:
+            Bus.objs.append(obj)
+
+    @staticmethod
+    def byorig(orig):
+        res = None
+        for obj in Bus.objs:
+            if repr(obj) == orig:
+                res = obj
+                break
+        return res
+
+
 class Callbacks(Object):
 
     cbs = {}
 
-    def register(self, typ, cbs):
+    @staticmethod
+    def register(typ, cbs):
         if typ not in Callbacks.cbs:
             Callbacks.cbs[typ] = cbs
 
-    def callback(self, event):
-        func = self.cbs.get(event.type)
+    @staticmethod
+    def callback(event):
+        func = Callbacks.cbs.get(event.type)
         if not func:
             event.ready()
             return
         func(event)
 
-    def dispatch(self, event):
-        self.callback(event)
+    @staticmethod
+    def dispatch(event):
+        Callbacks.callback(event)
 
-    def gettype(self, typ):
-        return self.cbs.get(typ)
+    @staticmethod
+    def get(typ):
+        return Callbacks.cbs.get(typ)
+
+
+class Command(Object):
+
+    cmd = {}
+
+    @staticmethod
+    def add(cmd):
+        Command.cmd[cmd.__name__] = cmd
+
+    @staticmethod
+    def get(cmd):
+        return Command.cmd.get(cmd)
+
+    @staticmethod
+    def remove(cmd):
+        del Command.cmd[cmd]
 
 
 class Event(Object):
@@ -116,6 +155,7 @@ class Handler(Callbacks):
         pass
 
     def handle(self, event):
+        event.orig = repr(self)
         self.dispatch(event)
 
     def raw(self, txt):

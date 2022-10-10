@@ -9,6 +9,7 @@
 import importlib
 import os
 import queue
+import readline
 import socket
 import time
 import textwrap
@@ -16,13 +17,12 @@ import threading
 import _thread
 
 
-from op import Class, Default, Event, Object, Handler, Shell, Wd
+from op import Class, Command, Default, Event, Object, Handler, Shell, Wd
 from op import edit, keys, launch, last, locked, printable, register
 from op import save, scan, scandir
-from op.tbl import Command
 
 
-Wd.workdir = os.path.expanduser("~/.opirc")
+Wd.workdir = os.path.expanduser("~/.opi")
 
 
 starttime = time.time()
@@ -38,17 +38,17 @@ class NoUser(Exception):
 
 class Config(Default):
 
-    channel = "#opirc"
+    channel = "#opi"
     control = "!"
-    nick = "opirc"
+    nick = "opi"
     password = ""
     port = 6667
-    realname = "object programming irc bot demo"
+    realname = "object programming irc demo"
     sasl = False
     server = "localhost"
     servermodes = ""
     sleep = 60
-    username = "opirc"
+    username = "opi"
     users = False
 
     def __init__(self):
@@ -698,6 +698,7 @@ shl = Shell()
 
 def importer(packagename, modulename):
     name = "%s.%s" % (packagename, modulename)
+    print(name)
     try:
         mod = importlib.import_module(name, packagename)
         scan(irc, mod)
@@ -708,11 +709,11 @@ def importer(packagename, modulename):
 
 def main():
     scandir("mod", importer)
-    irc.start()
-    shl.start()
     mod = __import__("__main__")
     scan(irc, mod)
     scan(shl, mod)
+    irc.start()
+    shl.start()
     shl.wait()
 
 

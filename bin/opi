@@ -17,12 +17,12 @@ import threading
 import _thread
 
 
-from op import Class, Command, Default, Event, Object, Handler, Shell, Wd
-from op import edit, keys, launch, last, locked, printable, register
-from op import save, scan, scandir
+from op import Class, Default, Object, Wd
+from op import edit, keys, launch, last, locked, printable, register, save
+from op.run import Bus, Command, Event, Handler, Shell, scan, scandir
 
 
-Wd.workdir = os.path.expanduser("~/.opi")
+Wd.workdir = os.path.expanduser("~/.op")
 
 
 starttime = time.time()
@@ -43,7 +43,7 @@ class Config(Default):
     nick = "opi"
     password = ""
     port = 6667
-    realname = "object programming irc demo"
+    realname = "object programming irc"
     sasl = False
     server = "localhost"
     servermodes = ""
@@ -316,7 +316,7 @@ class IRC(Handler, Output):
                 )
 
     def register(self, cbs, func):
-        register(self.cmd, cbs, func)
+        register(self.cbs, cbs, func)
 
     def parsing(self, txt):
         rawstr = str(txt)
@@ -463,84 +463,6 @@ class IRC(Handler, Output):
         self.joined.wait()
 
 
-def cb_auth(event):
-    time.sleep(1.0)
-    bot = event.bot()
-    bot.raw("AUTHENTICATE %s" % bot.cfg.password)
-
-
-def cb_cap(event):
-    time.sleep(1.0)
-    bot = event.bot()
-    if bot.cfg.password and "ACK" in event.arguments:
-        bot.raw("AUTHENTICATE PLAIN")
-    else:
-        bot.raw("CAP REQ :sasl")
-
-
-def cb_h903(event):
-    time.sleep(1.0)
-    bot = event.bot()
-    bot.raw("CAP END")
-
-
-def cb_h904(event):
-    time.sleep(1.0)
-    bot = event.bot()
-    bot.raw("CAP END")
-
-
-def cb_error(event):
-    bot = event.bot()
-    bot.state.nrerror += 1
-    #bot.state.error = event.txt
-    bot.stop()
-
-
-def cb_kill(event):
-    pass
-
-
-def cb_log(event):
-    pass
-
-
-def cb_notice(event):
-    bot = event.bot()
-    if event.txt.startswith("VERSION"):
-        txt = "\001VERSION %s %s - %s\001" % (
-            "op",
-            bot.cfg.version,
-            bot.cfg.username,
-        )
-        bot.command("NOTICE", event.channel, txt)
-
-
-def cb_privmsg(event):
-    event.parse()
-    if event.txt:
-        bot = event.bot()
-        if event.txt[0] in [bot.cfg.cc, "!"]:
-            event.txt = event.txt[1:]
-        elif event.txt.startswith("%s:" % bot.cfg.nick):
-            event.txt = event.txt[len(bot.cfg.nick)+1:]
-        else:
-            return
-        if bot.cfg.users and not Users.allowed(event.origin, "USER"):
-            return
-        splitted = event.txt.split()
-        splitted[0] = splitted[0].lower()
-        event.txt = " ".join(splitted)
-        event.type = "event"
-        bot.handle(event)
-
-
-def cb_quit(event):
-    bot = event.bot()
-    if event.orig and event.orig in bot.zelf:
-        bot.reconnect()
-
-
 class User(Object):
 
     def __init__(self, val=None):
@@ -599,6 +521,78 @@ class Users(Object):
             user.perms.append(permission.upper())
             save(user)
         return user
+
+
+def cb_auth(bot, event):
+    time.sleep(1.0)
+    bot.raw("AUTHENTICATE %s" % bot.cfg.password)
+
+
+def cb_cap(bot, event):
+    time.sleep(1.0)
+    if bot.cfg.password and "ACK" in event.arguments:
+        bot.raw("AUTHENTICATE PLAIN")
+    else:
+        bot.raw("CAP REQ :sasl")
+
+
+def cb_h903(bot, event):
+    time.sleep(1.0)
+    bot.raw("CAP END")
+
+
+def cb_h904(bot, event):
+    time.sleep(1.0)
+    bot.raw("CAP END")
+
+
+def cb_error(bot, event):
+    bot = event.bot()
+    bot.state.nrerror += 1
+    #bot.state.error = event.txt
+    bot.stop()
+
+
+def cb_kill(bot, event):
+    pass
+
+
+def cb_log(bot, event):
+    pass
+
+
+def cb_notice(bot, event):
+    if event.txt.startswith("VERSION"):
+        txt = "\001VERSION %s %s - %s\001" % (
+            "op",
+            bot.cfg.version,
+            bot.cfg.username,
+        )
+        bot.command("NOTICE", event.channel, txt)
+
+
+def cb_privmsg(bot, event):
+    event.parse()
+    if event.txt:
+        if event.txt[0] in [bot.cfg.cc, "!"]:
+            event.txt = event.txt[1:]
+        elif event.txt.startswith("%s:" % bot.cfg.nick):
+            event.txt = event.txt[len(bot.cfg.nick)+1:]
+        else:
+            return
+        if bot.cfg.users and not Users.allowed(event.origin, "USER"):
+            return
+        splitted = event.txt.split()
+        splitted[0] = splitted[0].lower()
+        event.txt = " ".join(splitted)
+        event.type = "event"
+        event.orig = repr(bot)
+        shl.put(event)
+
+
+def cb_quit(bot, event):
+    if event.orig and event.orig in bot.zelf:
+        bot.reconnect()
 
 
 def cfg(event):
@@ -698,10 +692,8 @@ shl = Shell()
 
 def importer(packagename, modulename):
     name = "%s.%s" % (packagename, modulename)
-    print(name)
     try:
         mod = importlib.import_module(name, packagename)
-        scan(irc, mod)
         scan(shl, mod)
     except ModuleNotFoundError:
         pass
@@ -709,9 +701,6 @@ def importer(packagename, modulename):
 
 def main():
     scandir("mod", importer)
-    mod = __import__("__main__")
-    scan(irc, mod)
-    scan(shl, mod)
     irc.start()
     shl.start()
     shl.wait()

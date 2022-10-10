@@ -22,13 +22,13 @@ from .thr import launch
 Cfg = Default()
 
 
-def handle(evt):
-    evt.parse()
-    func = Command.get(evt.cmd)
+def handle(bot, event):
+    event.parse()
+    func = getattr(bot, event.cmd, None)
     if func:
-        func(evt)
-        evt.show()
-    evt.ready()
+        func(event)
+        event.show()
+    event.ready()
 
 
 class Bus(Object):
@@ -52,41 +52,37 @@ class Bus(Object):
 
 class Callbacks(Object):
 
-    cbs = {}
+    cbs = Object()
 
-    @staticmethod
-    def register(typ, cbs):
-        if typ not in Callbacks.cbs:
-            Callbacks.cbs[typ] = cbs
+    def register(self, typ, cbs):
+        if typ not in self.cbs:
+            setattr(self.cbs, typ, cbs)
 
-    @staticmethod
-    def callback(event):
-        func = Callbacks.cbs.get(event.type)
+    def callback(self, event):
+        func = getattr(self.cbs, event.type, None)
         if not func:
             event.ready()
             return
-        func(event)
+        func(self, event)
 
-    @staticmethod
-    def dispatch(event):
-        Callbacks.callback(event)
+    def dispatch(self, event):
+        self.callback(event)
 
-    @staticmethod
-    def get(typ):
-        return Callbacks.cbs.get(typ)
+    def get(self, typ):
+        return getattr(self.cbs, typ)
 
 
 class Command(Object):
 
-    cmd = {}
+    cmd = Object()
 
     @staticmethod
     def add(cmd):
-        Command.cmd[cmd.__name__] = cmd
+        setattr(Command.cmd, cmd.__name__, cmd)
 
     @staticmethod
     def get(cmd):
-        return Command.cmd.get(cmd)
+        return getattr(Command.cmd, cmd, None)
 
     @staticmethod
     def remove(cmd):
@@ -106,6 +102,9 @@ class Event(Object):
         self.sets = Default()
         self.txt = ""
         self.type = "event"
+
+    def bot(self):
+        return Bus.byorig(self.orig)
 
     def parse(self, txt=None):
         if txt:
@@ -140,8 +139,6 @@ class Event(Object):
 
 class Handler(Callbacks):
 
-    cmd = Object()
-
     def __init__(self):
         Callbacks.__init__(self)
         self.queue = queue.Queue()
@@ -149,13 +146,12 @@ class Handler(Callbacks):
         Bus.add(self)
 
     def add(self, cmd):
-        setattr(self.cmd, cmd.__name__, cmd)
+        Command.add(cmd)
  
     def announce(self, txt):
         pass
 
     def handle(self, event):
-        event.orig = repr(self)
         self.dispatch(event)
 
     def raw(self, txt):
@@ -168,8 +164,11 @@ class Handler(Callbacks):
     def poll(self):
         return self.queue.get()
 
+    def put(self, event):
+        self.queue.put_nowait(event)
+
     def raw(self, txt):
-        print(txt)
+        pass
 
     def start(self):
         launch(self.loop)
@@ -188,16 +187,6 @@ class Shell(Handler):
         event.orig = repr(self)
         return event
 
-    def raw(self, txt):
-        pass
-
-    def start(self):
-        launch(self.loop)
-
-    def wait(self):
-        while 1:
-            time.sleep(1.0)
-
 
 def from_exception(exc, txt="", sep=" "):
     result = []
@@ -209,8 +198,11 @@ def from_exception(exc, txt="", sep=" "):
 def scan(obj, mod):
     for _k, clz in inspect.getmembers(mod, inspect.isclass):
         Class.add(clz)
-    for _k, cmd in inspect.getmembers(mod, inspect.isfunction):
-        if "event" in cmd.__code__.co_varnames:
+    for key, cmd in inspect.getmembers(mod, inspect.isfunction):
+        if key.startswith("cb"):
+            continue
+        names = cmd.__code__.co_varnames
+        if "event" in names:
             obj.add(cmd)
 
 

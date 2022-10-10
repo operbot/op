@@ -6,69 +6,52 @@
 
 import inspect
 import os
+import queue
 import threading
 import traceback
+import time
 
 
 from .cls import Class
-from .obj import Object
-from .fnc import name
+from .dft import Default
+from .obj import Object, register
+from .fnc import edit, name
+from .tbl import Bus, Command
+from .thr import launch
 
 
-class Bus(Object):
-
-    objs = []
-    
-    @staticmethod
-    def add(obj):
-        if repr(obj) not in [repr(x) for x in Bus.objs]:
-            Bus.objs.append(obj)
-
-    @staticmethod
-    def byorig(orig):
-        res = None
-        for obj in Bus.objs:
-            if repr(obj) == orig:
-                res = obj
-                break
-        return res
+Cfg = Default()
 
 
-class Handler(Object):
+def handle(evt):
+    evt.parse()
+    func = Command.get(evt.cmd)
+    if func:
+        func(evt)
+        evt.show()
+    evt.ready()
 
-    cmd = Object()
 
-    def __init__(self):
-        Object.__init__(self)
-        Bus.add(self)
- 
-    def announce(self, txt):
-        pass
+class Callbacks(Object):
 
-    def handle(self, event):
-        event.parse()
-        event.orig = repr(self)
-        try:
-            func = getattr(self.cmd, event.cmd)
-        except AttributeError:
-            func = None
-        if func:
-            func(event)
-            event.show()
-        event.ready()
+    cbs = {}
 
-    def raw(self, txt):
-        pass
+    def register(self, typ, cbs):
+        if typ not in Callbacks.cbs:
+            Callbacks.cbs[typ] = cbs
 
-    def register(self, cmd):
-        setattr(self.cmd, cmd.__name__, cmd)
+    def callback(self, event):
+        func = self.cbs.get(event.type)
+        if not func:
+            event.ready()
+            return
+        func(event)
 
-    def scan(self, mod):
-        for _k, clz in inspect.getmembers(mod, inspect.isclass):
-            Class.add(clz)
-        for _k, cmd in inspect.getmembers(mod, inspect.isfunction):
-            if "event" in cmd.__code__.co_varnames:
-                self.register(cmd)
+    def dispatch(self, event):
+        self.callback(event)
+
+    def gettype(self, typ):
+        return self.cbs.get(typ)
 
 
 class Event(Object):
@@ -77,10 +60,13 @@ class Event(Object):
         Object.__init__(self, *args, **kwargs)
         self.__ready__ = threading.Event()
         self.args = []
-        self.bot = None
+        self.cmd = ""
+        self.orig = ""
         self.result = []
         self.rest = ""
+        self.sets = Default()
         self.txt = ""
+        self.type = "event"
 
     def parse(self, txt=None):
         if txt:
@@ -91,6 +77,13 @@ class Event(Object):
         if len(splitted) > 1:
              self.args = splitted[1:]
              self.rest = " ".join(self.args)
+        for word in splitted[1:]:
+            try:
+                key, value = word.split("=")
+                register(self.sets, key, value)
+                continue
+            except ValueError:
+                pass
 
     def ready(self):
         self.__ready__.set()
@@ -106,11 +99,79 @@ class Event(Object):
         self.__ready__.wait()
 
 
+class Handler(Callbacks):
+
+    cmd = Object()
+
+    def __init__(self):
+        Callbacks.__init__(self)
+        self.queue = queue.Queue()
+        self.register("event", handle)
+        Bus.add(self)
+
+    def add(self, cmd):
+        setattr(self.cmd, cmd.__name__, cmd)
+ 
+    def announce(self, txt):
+        pass
+
+    def handle(self, event):
+        self.dispatch(event)
+
+    def raw(self, txt):
+        pass
+
+    def loop(self):
+        while 1:
+            self.handle(self.poll())
+
+    def poll(self):
+        return self.queue.get()
+
+    def raw(self, txt):
+        print(txt)
+
+    def start(self):
+        launch(self.loop)
+
+    def wait(self):
+        while 1:
+            time.sleep(1.0)
+
+
+class Shell(Handler):
+
+    def poll(self):
+        event = Event()
+        event.bot = self
+        event.txt = input("> ")
+        event.orig = repr(self)
+        return event
+
+    def raw(self, txt):
+        pass
+
+    def start(self):
+        launch(self.loop)
+
+    def wait(self):
+        while 1:
+            time.sleep(1.0)
+
+
 def from_exception(exc, txt="", sep=" "):
     result = []
     for frm in traceback.extract_tb(exc.__traceback__):
         result.append("%s:%s" % (os.sep.join(frm.filename.split(os.sep)[-2:]), frm.lineno))
     return "%s %s: %s" % (" ".join(result), name(exc), exc, )
+
+
+def scan(obj, mod):
+    for _k, clz in inspect.getmembers(mod, inspect.isclass):
+        Class.add(clz)
+    for _k, cmd in inspect.getmembers(mod, inspect.isfunction):
+        if "event" in cmd.__code__.co_varnames:
+            obj.add(cmd)
 
 
 def scandir(path, func):

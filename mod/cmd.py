@@ -34,7 +34,9 @@ Class.add(Todo)
 
 
 def cmd(event):
+    print(event)
     cli = Bus.byorig(event.orig)
+    print(type(cli))
     event.reply(",".join(sorted(cli.cmd)))
 
 

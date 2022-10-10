@@ -12,7 +12,7 @@ from .obj import Object, items, kind, update
 from .cls import Class
 from .jsn import hook
 from .wdr import Wd
-from .utl import fns, fntime
+from .utl import fns, fntime, locked
 
 
 dblock = _thread.allocate_lock()
@@ -26,30 +26,6 @@ def __dir__():
             "last",
             "search"
            )
-
-
-def locked(lock):
-
-    noargs = False
-
-    def lockeddec(func, *args, **kwargs):
-
-        def lockedfunc(*args, **kwargs):
-            lock.acquire()
-            if args or kwargs:
-                locked.noargs = True
-            res = None
-            try:
-                res = func(*args, **kwargs)
-            finally:
-                lock.release()
-            return res
-
-        lockeddec.__wrapped__ = func
-        lockeddec.__doc__ = func.__doc__
-        return lockedfunc
-
-    return lockeddec
 
 
 class Db():

@@ -44,15 +44,15 @@ great for giving objects peristence by having their state stored in files::
 """
 
 
-from .thr import Thread, launch
 from .cls import Class
 from .dbs import Db, allobj, find, fns, fntime, hook, last, locked
 from .dft import Default
 from .fnc import *
 from .jsn import ObjectDecoder, ObjectEncoder, dump, dumps, load, loads, save
 from .obj import *
-from .run import Event, Handler, scandir
-from .utl import cdir, elapsed, spl
+from .run import Event, Handler, Shell, scan, scandir
+from .thr import Thread, launch
+from .utl import cdir, elapsed, locked, spl
 from .wdr import Wd, setwd
 
 
@@ -77,6 +77,7 @@ def __dir__():
             'Object',
             'ObjectDecoder',
             'ObjectEncoder',
+            'Shell',
             'Thread',
             'Wd',
             'allobj',

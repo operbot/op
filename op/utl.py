@@ -116,6 +116,30 @@ def fntime(path):
     return tme
 
 
+def locked(lock):
+
+    noargs = False
+
+    def lockeddec(func, *args, **kwargs):
+
+        def lockedfunc(*args, **kwargs):
+            lock.acquire()
+            if args or kwargs:
+                locked.noargs = True
+            res = None
+            try:
+                res = func(*args, **kwargs)
+            finally:
+                lock.release()
+            return res
+
+        lockeddec.__wrapped__ = func
+        lockeddec.__doc__ = func.__doc__
+        return lockedfunc
+
+    return lockeddec
+
+
 def fnclass(path):
     pth = []
     try:

@@ -161,9 +161,6 @@ class Handler(Callbacks):
     def handle(self, event):
         self.dispatch(event)
 
-    def raw(self, txt):
-        pass
-
     def loop(self):
         while 1:
             self.handle(self.poll())
@@ -176,6 +173,9 @@ class Handler(Callbacks):
 
     def raw(self, txt):
         pass
+
+    def say(self, channel, txt):
+        self.raw(txt)
 
     def start(self):
         launch(self.loop)

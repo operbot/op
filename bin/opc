@@ -24,8 +24,7 @@ starttime = time.time()
 
 class CLI(Handler):
 
-    @staticmethod
-    def raw(txt):
+    def raw(self, txt):
         print(txt)
 
 
@@ -45,6 +44,7 @@ def main():
     scandir("mod", importer)
     evt = Event()
     evt.parse(" ".join(sys.argv[1:]))
+    evt.orig = repr(cli)
     cli.handle(evt)
     evt.wait()
 

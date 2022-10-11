@@ -1,7 +1,7 @@
 # This file is placed in the Public Domain.
 
 
-"object"
+"object programming"
 
 
 import json
@@ -171,7 +171,7 @@ class TestObject(unittest.TestCase):
 
     def test_opformat(self):
         obj = Object()
-        self.assertEqual(op.format(obj), "")
+        self.assertEqual(op.printable(obj), "")
 
     def test_getattr(self):
         obj = Object()

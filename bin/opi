@@ -22,6 +22,8 @@ from op import Class, Default, Object, Wd
 from op import edit, keys, launch, last, locked, printable, register, save
 from op.run import Bus, Command, Event, Handler, Shell, command, scan, scandir
 
+from opm import cmds
+
 
 Wd.workdir = os.path.expanduser("~/.op")
 
@@ -382,9 +384,6 @@ class IRC(Handler, Output):
             event.parse()
             cli.handle(event)
 
-    def register(self, cbs, func):
-        register(self.cbs, cbs, func)
-
     def parsing(self, txt):
         rawstr = str(txt)
         rawstr = rawstr.replace("\u0001", "")
@@ -486,6 +485,9 @@ class IRC(Handler, Output):
         self.connected.clear()
         self.joined.clear()
         self.doconnect(self.cfg.server, self.cfg.nick, int(self.cfg.port))
+
+    def register(self, cbs, func):
+        register(self.cbs, cbs, func)
 
     def say(self, channel, txt):
         self.oput(channel, txt)
@@ -699,6 +701,7 @@ def importer(packagename, modulename):
 
 def main():
     scandir("mod", importer)
+    scan(cmds)
     if len(sys.argv) > 1:
         return command(cli, " ".join(sys.argv[1:]))
     irc.start()

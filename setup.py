@@ -20,7 +20,7 @@ setup(
     description="object programming",
     long_description=read(),
     license="Public Domain",
-    packages=["op"],
+    packages=["op", "opm"],
     scripts=["bin/op", "bin/opc", "bin/ops", "bin/opi"],
     classifiers=[
         "Development Status :: 4 - Beta",

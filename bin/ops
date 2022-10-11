@@ -15,13 +15,25 @@ import time
 
 
 from op import Wd, launch
-from op.run import Event, Handler, scan, scandir
+from op.run import Event, Handler, Shell, scan, scandir
+
+
+from opm import cmds
 
 
 Wd.workdir = os.path.expanduser("~/.op")
 
 
 starttime = time.time()
+
+class CLI(Handler):
+
+    def raw(self, txt):
+        print(txt)
+
+
+cli = CLI()
+
 
 
 class Shell(Handler):
@@ -79,6 +91,7 @@ def wrap(func):
 
 def main():
     scandir("mod", importer)
+    scan(shl, cmds)
     shl.start()
     shl.wait()
 

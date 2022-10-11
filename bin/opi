@@ -11,6 +11,7 @@ import os
 import queue
 import readline
 import socket
+import sys
 import time
 import textwrap
 import threading
@@ -19,7 +20,7 @@ import _thread
 
 from op import Class, Default, Object, Wd
 from op import edit, keys, launch, last, locked, printable, register, save
-from op.run import Bus, Command, Event, Handler, Shell, scan, scandir
+from op.run import Bus, Command, Event, Handler, Shell, command, scan, scandir
 
 
 Wd.workdir = os.path.expanduser("~/.op")
@@ -29,6 +30,15 @@ starttime = time.time()
 
 
 saylock = _thread.allocate_lock()
+
+
+class CLI(Shell):
+
+    def raw(self, txt):
+        print(txt)
+
+
+cli = CLI()
 
 
 class NoUser(Exception):
@@ -209,7 +219,6 @@ class IRC(Handler, Output):
         else:
             self.raw("CAP REQ :sasl")
 
-
     @locked(saylock)
     def command(self, cmd, *args):
         if not args:
@@ -270,13 +279,10 @@ class IRC(Handler, Output):
         txt = txt.replace("  ", " ")
         self.command("PRIVMSG", channel, txt)
 
-
     def error(self, event):
         self.state.nrerror += 1
         self.state.error = event.txt
         self.stop()
-
-
 
     def event(self, txt):
         evt = self.parsing(txt)
@@ -310,12 +316,9 @@ class IRC(Handler, Output):
         time.sleep(1.0)
         elf.raw("CAP END")
 
-
     def h904(self, event):
         time.sleep(1.0)
         self.raw("CAP END")
-
-
 
     def joinall(self):
         for channel in self.channels:
@@ -377,7 +380,7 @@ class IRC(Handler, Output):
             event.type = "event"
             event.orig = repr(self)
             event.parse()
-            shl.handle(event)
+            cli.handle(event)
 
     def register(self, cbs, func):
         register(self.cbs, cbs, func)
@@ -530,19 +533,6 @@ class IRC(Handler, Output):
         self.joined.wait()
 
 
-class User(Object):
-
-    def __init__(self, val=None):
-        super().__init__()
-        self.user = ""
-        self.perms = []
-        if val:
-            update(self, val)
-
-
-Class.add(User)
-
-
 class Users(Object):
 
     @staticmethod
@@ -588,6 +578,19 @@ class Users(Object):
             user.perms.append(permission.upper())
             save(user)
         return user
+
+
+class User(Object):
+
+    def __init__(self, val=None):
+        super().__init__()
+        self.user = ""
+        self.perms = []
+        if val:
+            update(self, val)
+
+
+Class.add(User)
 
 
 def cfg(event):
@@ -681,24 +684,26 @@ def pwd(event):
 Command.add(pwd)
 
 
+cli = CLI()
 irc = IRC()
-shl = Shell()
 
 
 def importer(packagename, modulename):
     name = "%s.%s" % (packagename, modulename)
     try:
         mod = importlib.import_module(name, packagename)
-        scan(shl, mod)
+        scan(cli, mod)
     except ModuleNotFoundError:
         pass
 
 
 def main():
     scandir("mod", importer)
+    if len(sys.argv) > 1:
+        return command(cli, " ".join(sys.argv[1:]))
     irc.start()
-    shl.start()
-    shl.wait()
+    cli.start()
+    cli.wait()
 
 
 if __name__ == "__main__":

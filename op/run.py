@@ -7,6 +7,7 @@
 import inspect
 import os
 import queue
+import sys
 import threading
 import traceback
 import time
@@ -192,6 +193,14 @@ class Shell(Handler):
         event.txt = input("> ")
         event.orig = repr(self)
         return event
+
+
+def command(cli, txt):
+    evt = Event()
+    evt.parse(txt)
+    evt.orig = repr(cli)
+    cli.handle(evt)
+    return evt
 
 
 def from_exception(exc, txt="", sep=" "):

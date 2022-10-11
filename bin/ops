@@ -51,8 +51,6 @@ class Shell(Handler):
 shl = Shell()
 
 
-
-
 def importer(packagename, modulename):
     name = "%s.%s" % (packagename, modulename)
     try:

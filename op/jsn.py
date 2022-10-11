@@ -7,7 +7,6 @@
 
 import datetime
 import json
-import op
 import os
 
 

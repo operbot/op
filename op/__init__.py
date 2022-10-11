@@ -45,7 +45,7 @@ great for giving objects peristence by having their state stored in files::
 
 
 from .cls import Class
-from .dbs import Db, allobj, find, fns, fntime, hook, last, locked
+from .dbs import Db, allobj, find, fns, fntime, hook, last
 from .dft import Default
 from .fnc import *
 from .jsn import ObjectDecoder, ObjectEncoder, dump, dumps, load, loads, save

@@ -8,7 +8,7 @@
 import types
 
 
-from .obj import keys, register
+from .obj import items, keys, register
 
 
 def __dir__():
@@ -68,7 +68,3 @@ def name(obj):
     if "__name__" in dir(obj):
         return obj.__name__
     return None
-
-
-def register(obj, key, value):
-    setattr(obj, key, value)

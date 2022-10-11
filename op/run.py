@@ -1,4 +1,5 @@
 # This file is placed in the Public Domain.
+# pylint: disable=C0115,C0116,W0201,W0613,R0902
 
 
 "runtime"
@@ -7,7 +8,6 @@
 import inspect
 import os
 import queue
-import sys
 import threading
 import traceback
 import time
@@ -16,7 +16,7 @@ import time
 from .cls import Class
 from .dft import Default
 from .obj import Object, register
-from .fnc import edit, name
+from .fnc import name
 from .thr import launch
 
 
@@ -96,19 +96,14 @@ class Command(Object):
         del Command.cmd[cmd]
 
 
-class Event(Object):
+class Event(Default):
 
-    def __init__(self, *args, **kwargs):
-        Object.__init__(self, *args, **kwargs)
+    def __init__(self):
+        Default.__init__(self)
         self.__ready__ = threading.Event()
         self.args = []
-        self.channel = ""
-        self.cmd = ""
-        self.orig = ""
         self.result = []
-        self.rest = ""
         self.sets = Default()
-        self.txt = ""
         self.type = "event"
 
     def bot(self):
@@ -119,10 +114,10 @@ class Event(Object):
             self.txt = txt
         splitted = self.txt.split()
         if splitted:
-             self.cmd = splitted[0]
+            self.cmd = splitted[0]
         if len(splitted) > 1:
-             self.args = splitted[1:]
-             self.rest = " ".join(self.args)
+            self.args = splitted[1:]
+            self.rest = " ".join(self.args)
         for word in splitted[1:]:
             try:
                 key, value = word.split("=")
@@ -153,9 +148,10 @@ class Handler(Callbacks):
         self.register("event", handle)
         Bus.add(self)
 
-    def add(self, cmd):
+    @staticmethod
+    def add(cmd):
         Command.add(cmd)
- 
+
     def announce(self, txt):
         pass
 
@@ -181,7 +177,8 @@ class Handler(Callbacks):
     def start(self):
         launch(self.loop)
 
-    def wait(self):
+    @staticmethod
+    def wait():
         while 1:
             time.sleep(1.0)
 

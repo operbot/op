@@ -50,7 +50,7 @@ from .dft import Default
 from .fnc import *
 from .jsn import ObjectDecoder, ObjectEncoder, dump, dumps, load, loads, save
 from .obj import *
-from .thr import Thread, launch
+from .thr import Repeater, Thread, Timer, launch
 from .utl import cdir, elapsed, locked, spl
 from .wdr import Wd, setwd
 
@@ -74,7 +74,9 @@ def __dir__():
             'Object',
             'ObjectDecoder',
             'ObjectEncoder',
+            'Repeater',
             'Thread',
+            'Timer',
             'Wd',
             'allobj',
             'cls',

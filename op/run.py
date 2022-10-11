@@ -42,6 +42,11 @@ class Bus(Object):
             Bus.objs.append(obj)
 
     @staticmethod
+    def announce(txt):
+        for obj in Bus.objs:
+            obj.announce(txt)
+
+    @staticmethod
     def byorig(orig):
         res = None
         for obj in Bus.objs:

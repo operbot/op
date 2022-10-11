@@ -21,9 +21,9 @@ import _thread
 from op import Class, Default, Object, Wd
 from op import edit, keys, launch, last, locked, printable, register, save
 from op.run import Bus, Command, Event, Handler, Shell, command, scan, scandir
+from opm.rss import Fetcher
 
-
-from opm import cmds
+from opm import cmds, rss
 
 
 Wd.workdir = os.path.expanduser("~/.op")
@@ -699,11 +699,15 @@ def importer(packagename, modulename):
 
 def main():
     scandir("mod", importer)
-    scan(cli,cmds)
+    scan(cli, cmds)
+    scan(cli, rss)
     if len(sys.argv) > 1:
         return command(cli, " ".join(sys.argv[1:]))
     irc.start()
     scan(irc, cmds)
+    scan(irc, rss)
+    fetcher = Fetcher()
+    fetcher.start()
     cli.start()
     cli.wait()
 

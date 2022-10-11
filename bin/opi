@@ -22,6 +22,7 @@ from op import Class, Default, Object, Wd
 from op import edit, keys, launch, last, locked, printable, register, save
 from op.run import Bus, Command, Event, Handler, Shell, command, scan, scandir
 
+
 from opm import cmds
 
 
@@ -38,9 +39,6 @@ class CLI(Shell):
 
     def raw(self, txt):
         print(txt)
-
-
-cli = CLI()
 
 
 class NoUser(Exception):
@@ -701,10 +699,11 @@ def importer(packagename, modulename):
 
 def main():
     scandir("mod", importer)
-    scan(cmds)
+    scan(cli,cmds)
     if len(sys.argv) > 1:
         return command(cli, " ".join(sys.argv[1:]))
     irc.start()
+    scan(irc, cmds)
     cli.start()
     cli.wait()
 

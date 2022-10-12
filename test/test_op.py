@@ -1,19 +1,16 @@
 # This file is placed in the Public Domain.
+# pylint: disable=C0115,C0116,R0904
 
 
 "object programming"
 
 
-import json
-import op
 import os
 import unittest
 
 
 from op import Object, items, keys, register, update, values
-from op import load, kind, save
-from op import edit
-from op import ObjectDecoder, ObjectEncoder, dumps, loads
+from op import load, kind, save, edit, dumps, loads, printable
 from op import Wd
 
 
@@ -171,7 +168,7 @@ class TestObject(unittest.TestCase):
 
     def test_opformat(self):
         obj = Object()
-        self.assertEqual(op.printable(obj), "")
+        self.assertEqual(printable(obj), "")
 
     def test_getattr(self):
         obj = Object()

@@ -18,6 +18,9 @@ import threading
 import _thread
 
 
+sys.path.insert(0, os.getcwd())
+
+
 from op import Class, Default, Object, Wd
 from op import edit, keys, launch, last, locked, printable, register, save
 from op.run import Bus, Command, Event, Handler, Shell, command, scan, scandir

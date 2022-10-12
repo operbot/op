@@ -12,6 +12,9 @@ import sys
 import time
 
 
+sys.path.insert(0, os.getcwd())
+
+
 from op import Wd
 from op.run import Bus, Event, Handler, scan, scandir
 

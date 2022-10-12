@@ -13,4 +13,4 @@ def popen(txt):
         print(line.rstrip())
 
 
-popen("python3 setup.py sdist bdist_wheel")
+popen("python3 setup.py sdist")

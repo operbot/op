@@ -2,11 +2,15 @@
 # This file is placed in the Public Domain.
 
 
+"run os.popen in subdirectories"
+
+
 import os
 import sys
 
 
 SKIP="."
+
 
 def popen(txt):
     for line in os.popen(txt).readlines():

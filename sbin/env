@@ -15,7 +15,7 @@ def popen(txt):
 
 
 popen("rm -fR ~/.cache/pip")
-popen("bin/clean")
-popen("python3 setup.py sdist")
+popen("sbin/clean")
+popen("sbin/build")
 popen("python3 -mvirtualenv --no-download env")
-popen("env/bin/pip3 install op -f dist --force-reinstall --no-deps")
+popen("env/bin/pip3 install objectprogramming -f dist --force-reinstall --no-deps")

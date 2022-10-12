@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # This file is placed in the Public Domain.
-# pylint: disable=C0115,C0116,R0201
+# pylint: disable=C0115,C0116,R0201,C0413
 
 
 "object programming irc"
@@ -25,6 +25,7 @@ from op import Class, Default, Object, Wd
 from op import edit, keys, launch, last, locked, printable, register, save
 from op.run import Bus, Command, Event, Handler, Shell, command, scan, scandir
 from opm.rss import Fetcher
+
 
 from opm import cmds, rss
 

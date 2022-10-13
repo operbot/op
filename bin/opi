@@ -32,7 +32,7 @@ from opm.rss import Fetcher
 from opm import cmds, irc, rss
 
 
-Wd.workdir = os.path.expanduser("~/.opd")
+Wd.workdir = os.path.expanduser("~/.op")
 
 
 starttime = time.time()

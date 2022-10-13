@@ -13,6 +13,6 @@ def popen(txt):
         print(line.rstrip())
 
 
-popen("sbin/clean")
+popen("bins/clean")
 popen("rm -fR ~/.cache/pip/")
 popen("rm -fR env html")

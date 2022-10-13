@@ -13,7 +13,7 @@ os.environ["PYTHONPATH"] = "."
 
 CMD = "pylint %s"
 SKIP = ["Your code", "---"]
-TODO = ["op", "bin", "sbin"]
+TODO = ["op", "bin", "bins"]
 
 
 def popen(txt):

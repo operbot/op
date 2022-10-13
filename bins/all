@@ -17,9 +17,9 @@ def popen(txt):
             print(line.rstrip())
 
 
-popen("sbin/wipe")
-popen("sbin/check")
-popen("sbin/build")
-popen("sbin/lint")
-popen("sbin/test")
-popen("sbin/env")
+popen("bins/wipe")
+popen("bins/check")
+popen("bins/build")
+popen("bins/lint")
+popen("bins/test")
+popen("bins/env")

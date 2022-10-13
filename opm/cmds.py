@@ -9,7 +9,7 @@ import time
 
 
 from op import Class, Object, elapsed, find, fntime, save, update
-from op.run import Bus, Command
+from opm.run import Bus, Command
 
 
 starttime = time.time()

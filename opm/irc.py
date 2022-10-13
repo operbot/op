@@ -25,10 +25,11 @@ sys.path.insert(0, os.getcwd())
 from op import Class, Default, Object, Wd
 from op import keys, last, locked, printable
 from op import edit, fntime, find, save, update
-from op import elapsed, launch, register
+from op import elapsed, register
 
 
-from op.run import Command, Event, Handler, Shell, handle
+from opm.run import Command, Event, Handler, Shell, handle
+from opm.thr import launch
 
 
 Wd.workdir = os.path.expanduser("~/.op")

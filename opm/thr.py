@@ -10,8 +10,8 @@ import threading
 import time
 
 
-from .obj import Object
-from .fnc import name
+from op.obj import Object
+from op.fnc import name
 
 
 def __dir__():

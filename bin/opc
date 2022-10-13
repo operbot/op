@@ -16,7 +16,7 @@ sys.path.insert(0, os.getcwd())
 
 
 from op import Wd
-from op.run import Bus, Event, Handler, scan, scandir
+from opm.run import Bus, Event, Handler, scan, scandir
 
 from opm import cmds
 

@@ -17,9 +17,9 @@ import time
 sys.path.insert(0, os.getcwd())
 
 
-from op import Wd, launch
-from op.run import Event, Handler, Shell, scan, scandir
-
+from op import Wd
+from opm.run import Event, Handler, Shell, scan, scandir
+from opm.thr import launch
 
 from opm import cmds
 

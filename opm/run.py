@@ -13,11 +13,11 @@ import traceback
 import time
 
 
-from .cls import Class
-from .dft import Default
-from .obj import Object, register
-from .fnc import name
-from .thr import launch
+from op.cls import Class
+from op.dft import Default
+from op.obj import Object, register
+from op.fnc import name
+from opm.thr import launch
 
 
 Cfg = Default()

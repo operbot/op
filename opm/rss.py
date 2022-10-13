@@ -16,10 +16,13 @@ from urllib.parse import quote_plus, urlencode
 from urllib.request import Request, urlopen
 
 
-from op import Class, Db, Default, Object, Repeater
-from op import find, fntime, last, launch, save
+from op import Class, Db, Default, Object
+from op import find, fntime, last, printable, save
 from op import edit, elapsed, register, spl, update
-from op.run import Bus, Cfg
+
+
+from opm.run import Bus, Command, Cfg
+from opm.thr import Repeater, launch
 
 
 def __dir__():
@@ -239,6 +242,9 @@ def dpl(event):
             event.reply("ok")
 
 
+Command.add(dpl)
+
+
 def ftc(event):
     if Cfg.debug:
         event.reply("not fetching, debug is enabled")
@@ -253,6 +259,9 @@ def ftc(event):
     if res:
         event.reply(",".join([str(x) for x in res]))
         return
+
+
+Command.add(ftc)
 
 
 def nme(event):
@@ -271,6 +280,9 @@ def nme(event):
     event.reply("ok")
 
 
+Command.add(nme)
+
+
 def rem(event):
     if not event.args:
         event.reply("rem <stringinurl>")
@@ -285,13 +297,16 @@ def rem(event):
     event.reply("ok")
 
 
+Command.add(rem)
+
+
 def rss(event):
     if not event.rest:
         _nr = 0
         for _fn, feed in find("rss"):
             event.reply("%s %s %s" % (
                                       _nr,
-                                      feed,
+                                      printable(feed),
                                       elapsed(time.time() - fntime(_fn)))
                                      )
             _nr += 1
@@ -309,3 +324,6 @@ def rss(event):
     feed.rss = event.args[0]
     save(feed)
     event.reply("ok")
+
+
+Command.add(rss)

@@ -22,10 +22,13 @@ sys.path.insert(0, os.getcwd())
 
 
 from op import Class, Default, Object, Wd
-from op import edit, keys, launch, last, locked, printable, register, save
-from op.run import Bus, Command, Event, Handler, Shell, command, scandir
+from op import edit, keys, last, locked, printable, register, save
+
+
+from opm.run import Bus, Command, Event, Handler, Shell, command, scandir
 from opm.irc import IRC
 from opm.rss import Fetcher
+from opm.thr import launch
 from opm import cmds, irc, rss
 
 

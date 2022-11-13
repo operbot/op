@@ -1,7 +1,11 @@
 # This file is placed in the Public Domain.
+# pylint: disable=R0903,R1732,C0209,C0115,C0116
 
 
 "rich site syndicate"
+
+
+## import
 
 
 import html.parser
@@ -16,13 +20,15 @@ from urllib.parse import quote_plus, urlencode
 from urllib.request import Request, urlopen
 
 
-from op import Class, Db, Default, Object
+from op import Class, Db, Default, Object, write
 from op import find, fntime, last, printable, save
-from op import edit, elapsed, register, spl, update
+from op import edit, register, update
+from op import Bus, Cfg
+from op import Repeater, launch
+from op import elapsed, spl
 
 
-from opm.run import Bus, Command, Cfg
-from opm.thr import Repeater, launch
+## define
 
 
 def __dir__():
@@ -46,6 +52,9 @@ def init():
     fetcher = Fetcher()
     fetcher.start()
     return fetcher
+
+
+## class
 
 
 class Feed(Default):
@@ -120,7 +129,7 @@ class Fetcher(Object):
                 save(fed)
             objs.append(fed)
         if objs:
-            save(Fetcher.seen)
+            write(Fetcher.seen)
         txt = ""
         name = getattr(feed, "name")
         if name:
@@ -132,12 +141,11 @@ class Fetcher(Object):
 
     def run(self):
         thrs = []
-        for _fn, obj in find("rss"):
-            thrs.append(launch(self.fetch, obj))
+        for feed in find("rss"):
+            thrs.append(launch(self.fetch, feed))
         return thrs
 
     def start(self, repeat=True):
-        "start the rss fetching loop."
         last(Fetcher.seen)
         if repeat:
             repeater = Repeater(300.0, self.run)
@@ -163,18 +171,21 @@ class Parser(Object):
 
 
     @staticmethod
-    def parse(txt, items="title,link"):
+    def parse(txt, item="title,link"):
         res = []
         for line in txt.split("<item>"):
             line = line.strip()
             obj = Object()
-            for item in spl(items):
-                register(obj, item, Parser.getitem(line, item))
+            for itm in spl(item):
+                register(obj, itm, Parser.getitem(line, itm))
             res.append(obj)
         return res
 
 
-def getfeed(url, items):
+## utility
+
+
+def getfeed(url, item):
     if Cfg.debug:
         return [Object(), Object()]
     try:
@@ -183,7 +194,7 @@ def getfeed(url, items):
         return [Object(), Object()]
     if not result:
         return [Object(), Object()]
-    return Parser.parse(str(result.data, "utf-8"), items)
+    return Parser.parse(str(result.data, "utf-8"), item)
 
 
 def gettinyurl(url):
@@ -227,6 +238,9 @@ def useragent(txt):
     return "Mozilla/5.0 (X11; Linux x86_64) " + txt
 
 
+## command
+
+
 def dpl(event):
     if len(event.args) < 2:
         event.reply("dpl <stringinurl> <item1,item2>")
@@ -234,21 +248,14 @@ def dpl(event):
     setter = {"display_list": event.args[1]}
     names = Class.full("rss")
     if names:
-        db = Db()
-        _fn, feed = db.match(names[0], {"rss": event.args[0]})
+        feed = Db.last(names[0], {"rss": event.args[0]})
         if feed:
             edit(feed, setter)
             save(feed)
-            event.reply("ok")
-
-
-Command.add(dpl)
+            event.done()
 
 
 def ftc(event):
-    if Cfg.debug:
-        event.reply("not fetching, debug is enabled")
-        return
     res = []
     thrs = []
     fetcher = Fetcher()
@@ -261,56 +268,42 @@ def ftc(event):
         return
 
 
-Command.add(ftc)
-
-
 def nme(event):
     if len(event.args) != 2:
         event.reply("nme <stringinurl> <name>")
         return
     selector = {"rss": event.args[0]}
-    _nr = 0
     got = []
-    for _fn, feed in find("rss", selector):
-        _nr += 1
+    for feed in  find("rss", selector):
         feed.name = event.args[1]
         got.append(feed)
     for feed in got:
         save(feed)
-    event.reply("ok")
-
-
-Command.add(nme)
+    event.done()
 
 
 def rem(event):
-    if not event.args:
+    if len(event.args) != 1:
         event.reply("rem <stringinurl>")
         return
     selector = {"rss": event.args[0]}
-    got = []
-    for _fn, feed in find("rss", selector):
+    for feed in find("rss", selector):
         feed.__deleted__ = True
-        got.append(feed)
-    for feed in got:
         save(feed)
-    event.reply("ok")
-
-
-Command.add(rem)
+    event.done()
 
 
 def rss(event):
     if not event.rest:
-        _nr = 0
-        for _fn, feed in find("rss"):
+        nrs = 0
+        for feed in find("rss"):
             event.reply("%s %s %s" % (
-                                      _nr,
+                                      nrs,
                                       printable(feed),
-                                      elapsed(time.time() - fntime(_fn)))
+                                      elapsed(time.time() - fntime(feed.__fnm__)))
                                      )
-            _nr += 1
-        if not _nr:
+            nrs += 1
+        if not nrs:
             event.reply("no rss feed found.")
         return
     url = event.args[0]
@@ -319,11 +312,9 @@ def rss(event):
         return
     res = list(find("rss", {"rss": url}))
     if res:
+        event.reply("already got %s" % url)
         return
     feed = Rss()
     feed.rss = event.args[0]
     save(feed)
-    event.reply("ok")
-
-
-Command.add(rss)
+    event.done()

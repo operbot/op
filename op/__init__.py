@@ -1,105 +1,107 @@
 # This file is placed in the Public Domain.
-# pylint: disable=R,C
-
-"""object programming 
 
 
-The ``op`` package provides an Object class, that allows for save/load
-to/from json files on disk. Objects can be searched with database
-functions and uses read-only files to improve persistence and a type in
-filename for reconstruction. Methods are factored out into functions to
-have a clean namespace to read JSON data into.
+"""Big Object is a load/saveable python object
+
+This module contains a big Object class that provides a clean, no methods,
+namespace for json data to be read into. This is necessary so that methods
+don't get overwritten by __dict__ updating and, without methods defined on
+the object, is easily being updated from a on disk stored json (dict).
 
 basic usage is this::
 
->>> import op
->>> o = op.Object()
->>> o.key = "value"
->>> o.key
->>> 'value'
+ >>> import op
+ >>> o = op.Object()
+ >>> o.key = "value"
+ >>> o.key
+ 'value'
 
-Objects try to mimic a dictionary while trying to be an object with normal
-attribute access as well. hidden methods are provided, the methods are
-factored out into functions like get, items, keys, register, set, update
-and values.
+Some hidden methods are provided, methods are factored out into functions
+like get, items, keys, register, set, update and values.
 
 load/save from/to disk::
 
->>> from op import Object, load, save
->>> o = Object()
->>> o.key = "value"
->>> p = save(o)
->>> obj = Object()
->>> load(obj, p)
->>> obj.key
->>> 'value'
+ >>> import op
+ >>> o = op.Object()
+ >>> o.key = "value"
+ >>> p = op.save(o)
+ >>> oo = op.Object()
+ >>> op.load(oo, p)
+ >>> oo.key
+ 'value'
 
-great for giving objects peristence by having their state stored in files::
+Big Objects can be searched with database functions and uses read-only files
+to improve persistence and a type in filename for reconstruction::
 
- >>> from op import Object, save
- >>> o = Object()
- >>> save(o)
- 'op.obj.Object/2021-08-31/15:31:05.717063'
+ 'op.obj.Object/11ee5f11bd874f1eaa9005980f9d7a94/2021-08-31/15:31:05.717063'
+
+ >>> import op
+ >>> o = op.Object()
+ >>> op.save(o)  # doctest: +ELLIPSIS
+ 'op.obj.Object/...'
+
+Great for giving objects peristence by having their state stored in files.
 
 """
 
 
-from .cls import Class
-from .dbs import Db, allobj, find, fns, fntime, hook, last
-from .dft import Default
-from .fnc import *
-from .jsn import ObjectDecoder, ObjectEncoder, dump, dumps, load, loads, save
+## import
+
+
+import datetime
+import getpass
+import inspect
+import json
+import os
+import pathlib
+import pwd
+import queue
+import threading
+import time
+import types
+import uuid
+
+
+from stat import ST_UID, ST_MODE, S_IMODE
+
+
 from .obj import *
-from .utl import cdir, elapsed, locked, spl
-from .wdr import Wd, setwd
+from .hdl import *
+from .thr import *
+from .utl import *
 
 
-from op import cls
-from op import dbs
-from op import dft
-from op import fnc
-from op import jsn
-from op import obj
-from op import utl
-from op import wdr
+from .run import Cfg
+
+
+## define
 
 
 def __dir__():
     return (
+            'Cfg',
             'Class',
-            'Db',
             'Default',
             'Object',
-            'ObjectDecoder',
-            'ObjectEncoder',
             'Wd',
-            'allobj',
-            'cls',
-            'dbs',
-            'dft',
-            'dump',
-            'dumps',
             'edit',
+            'elapsed',
             'find',
-            'fnc',
+            'from_exception',
             'items',
-            'jsn',
             'keys',
+            'kind',
             'last',
-            'load',
-            'loads',
-            'locked',
+            'launch',
+            'match',
             'name',
-            'obj',
             'printable',
             'register',
             'save',
-            'scan',
-            'scandir',
-            'setwd',
-            'spl',
             'update',
-            'utl',
             'values',
-            'wdr'
+            'write'
            )
+
+
+__all__ = __dir__()

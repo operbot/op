@@ -1,31 +1,46 @@
 # This file is placed in the Public Domain.
-# pylint: disable=R,C
+# pylint: disable=R,C,W,C0302
 
 
 "thread"
 
 
+## import
+
+
+import os
 import queue
 import threading
 import time
+import traceback
+import types
 
 
-from op.obj import Object
-from op.fnc import name
+## define
 
 
 def __dir__():
     return (
-            'Repeater',
             'Thread',
             'Timer',
-            'launch'
-           )
+            'Repeater',
+            'launch',
+            'name'
+           ) 
+
+
+__all__ = __dir__()
+
+
+## class
 
 
 class Thread(threading.Thread):
 
+    ""
+
     def __init__(self, func, thrname, *args, daemon=True):
+        ""
         super().__init__(None, self.run, name, (), {}, daemon=daemon)
         self._exc = None
         self._evt = None
@@ -45,19 +60,19 @@ class Thread(threading.Thread):
             yield k
 
     def join(self, timeout=None):
+        ""
         super().join(timeout)
         return self._result
 
     def run(self) -> None:
+        ""
         func, args = self.queue.get()
         if args:
             self._evt = args[0]
-        self.setName(self.name)
         self.starttime = time.time()
         self._result = func(*args)
 
-
-class Timer(Object):
+class Timer:
 
     def __init__(self, sleep, func, *args, thrname=None):
         super().__init__()
@@ -65,21 +80,21 @@ class Timer(Object):
         self.func = func
         self.sleep = sleep
         self.name = thrname or name(self.func)
-        self.state = Object()
+        self.state = {}
         self.timer = None
 
     def run(self):
-        self.state.latest = time.time()
+        self.state["latest"] = time.time()
         launch(self.func, *self.args)
 
     def start(self):
         timer = threading.Timer(self.sleep, self.run)
-        timer.setName(self.name)
-        timer.setDaemon(True)
+        timer.name = self.name
+        timer.daemon = True
         timer.sleep = self.sleep
         timer.state = self.state
-        timer.state.starttime = time.time()
-        timer.state.latest = time.time()
+        timer.state["starttime"] = time.time()
+        timer.state["latest"] = time.time()
         timer.func = self.func
         timer.start()
         self.timer = timer
@@ -98,8 +113,36 @@ class Repeater(Timer):
         return thr
 
 
+## utility
+
+
+def from_exception(exc, txt="", sep=" "):
+    result = []
+    for frm in traceback.extract_tb(exc.__traceback__):
+        fnm = os.sep.join(frm.filename.split(os.sep)[-2:])
+        result.append(f"{fnm}:{frm.lineno}")
+    nme = name(exc)
+    res = sep.join(result)
+    return f"{txt} {res} {nme}: {exc}"
+
+
 def launch(func, *args, **kwargs):
     thrname = kwargs.get("name", name(func))
     thr = Thread(func, thrname, *args)
     thr.start()
     return thr
+
+
+def name(obj):
+    typ = type(obj)
+    if isinstance(typ, types.ModuleType):
+        return obj.__name__
+    if "__self__" in dir(obj):
+        return "%s.%s" % (obj.__self__.__class__.__name__, obj.__name__)
+    if "__class__" in dir(obj) and "__name__" in dir(obj):
+        return "%s.%s" % (obj.__class__.__name__, obj.__name__)
+    if "__class__" in dir(obj):
+        return obj.__class__.__name__
+    if "__name__" in dir(obj):
+        return obj.__name__
+    return None

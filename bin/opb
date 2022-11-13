@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+# This file is placed in the Public Domain.
+# pylint: disable=C0115,C0116,C0209
+
+
+"bot"
+
+
+## import
+
+
+import os
+import signal
+import sys
+
+
+from op import Command, Event, Handler, Wd
+from op import printable, scan
+from op.run import boot, wrap
+
+
+from opm import cmds, irc, rss
+from opm.irc import Config
+
+
+## define
+
+
+NAME = "opb"
+
+
+Config.nick = NAME
+Config.channel = "#%s" % NAME
+Config.realname = NAME
+Config.username = NAME
+
+
+Wd.workdir = os.path.expanduser("~/.%s" % NAME)
+
+
+## class
+
+
+class Console(Handler):
+
+
+    def handle(self, event):
+        Command.handle(event)
+        event.wait()
+
+    def poll(self):
+        event = Event()
+        event.txt = input("> ")
+        event.orig = repr(self)
+        return event
+
+
+    def raw(self, txt):
+        print(txt)
+
+
+## utility
+
+
+def hup(_sig, _frame):
+    print("signal 15 called")
+    sys.stdout.flush()
+
+
+
+## runtime
+
+
+signal.signal(15, hup)
+
+
+def main():
+    boot(NAME)
+    scan(cmds)
+    scan(irc)
+    scan(rss)
+    bot = irc.init()
+    print(printable(bot.cfg, "nick,channel,server,port,sasl"))
+    rss.init()
+    csl = Console()
+    csl.start()
+    csl.wait()
+
+
+wrap(main)

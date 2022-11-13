@@ -1,9 +1,12 @@
 # This file is placed in the Public Domain.
-# pylint: disable=C0115,C0116,R0201,C0413,R0902,R0903,W0201,W0613
-# pylint: disable=R0912,R0915,R0904,W0221
+# pylint: disable=C0115,C0116,C0413,R0902,R0903,W0201,W0613
+# pylint: disable=E1101,R0912,R0915,R0904,W0221,C0209
 
 
 "irc"
+
+
+## import
 
 
 import base64
@@ -12,39 +15,52 @@ import queue
 import random
 import socket
 import ssl
-import sys
 import time
 import textwrap
 import threading
 import _thread
 
 
-sys.path.insert(0, os.getcwd())
+from op.obj import Class, Default, Object
+from op.obj import keys, last, printable
+from op.obj import edit, fntime, find, save, update
+from op.obj import register
+from op.hdl import Command, Event, Handler
+from op.thr import launch, name
+from op.utl import elapsed, locked
 
 
-from op import Class, Default, Object, Wd
-from op import keys, last, locked, printable
-from op import edit, fntime, find, save, update
-from op import elapsed, register
+## define
 
 
-from opm.run import Command, Event, Handler, Shell, handle
-from opm.thr import launch
+def __dir__():
+    return (
+            'Config',
+            'IRC',
+            'cfg',
+            'dlt',
+            'init',
+            'met',
+            'mre',
+            'pwd'
+           )
 
 
-Wd.workdir = os.path.expanduser("~/.op")
+__all__ = __dir__()
 
 
-starttime = time.time()
-
-
+NAME = "gcid"
+REALNAME = "Court. Prosecutor. Reconsider OTP-CR-117/19."
 saylock = _thread.allocate_lock()
 
 
-class CLI(Shell):
+def init():
+    irc = IRC()
+    irc.start()
+    return irc
 
-    def raw(self, txt):
-        print(txt)
+
+## class
 
 
 class NoUser(Exception):
@@ -54,17 +70,17 @@ class NoUser(Exception):
 
 class Config(Default):
 
-    channel = "#opd"
+    channel = "#%s" % NAME
     control = "!"
-    nick = "opd"
+    nick = "%s" % NAME
     password = ""
     port = 6667
-    realname = "object programming daemon"
+    realname = "%s" % REALNAME
     sasl = False
     server = "localhost"
     servermodes = ""
     sleep = 60
-    username = "opd"
+    username = "%s" % NAME
     users = False
 
     def __init__(self):
@@ -81,9 +97,6 @@ class Config(Default):
         self.sleep = Config.sleep
         self.username = Config.username
         self.users = Config.users
-
-
-Class.add(Config)
 
 
 class IEvent(Event):
@@ -142,11 +155,11 @@ class Output(Object):
         self.oqueue.put_nowait((channel, txt))
 
     def output(self):
-        while not self.dostop.isSet():
+        while not self.dostop.is_set():
             (channel, txt) = self.oqueue.get()
             if channel is None and txt is None:
                 break
-            if self.dostop.isSet():
+            if self.dostop.is_set():
                 break
             wrapper = TextWrap()
             txtlist = wrapper.wrap(txt)
@@ -159,9 +172,9 @@ class Output(Object):
                 _nr += 1
                 self.dosay(channel, txt)
 
-    def size(self, name):
+    def size(self, channel):
         if name in self.cache:
-            return len(self.cache[name])
+            return len(self.cache[channel])
         return 0
 
     def start(self):
@@ -208,8 +221,8 @@ class IRC(Handler, Output):
         self.register("NOTICE", self.notice)
         self.register("PRIVMSG", self.privmsg)
         self.register("QUIT", self.quit)
-        self.register("command", handle)
-        
+        self.register("command", Command.handle)
+
     def announce(self, txt):
         for channel in self.channels:
             self.say(channel, txt)
@@ -458,7 +471,7 @@ class IRC(Handler, Output):
             event.type = "command"
             event.orig = repr(self)
             event.parse()
-            self.handle(event)
+            Command.handle(event)
 
     def quit(self, event):
         if event.orig and event.orig in self.zelf:
@@ -490,8 +503,8 @@ class IRC(Handler, Output):
         self.joined.clear()
         self.doconnect(self.cfg.server, self.cfg.nick, int(self.cfg.port))
 
-    def register(self, cbs, func):
-        register(self.cbs, cbs, func)
+    def register(self, typ, cbs):
+        register(self.cbs, typ, cbs)
 
     def say(self, channel, txt):
         self.oput(channel, txt)
@@ -594,13 +607,13 @@ class User(Object):
             update(self, val)
 
 
-Class.add(User)
+## command
 
 
 def cfg(event):
     config = Config()
     last(config)
-    if not event.args:
+    if not event.sets:
         event.reply(printable(
                               config,
                               keys(config),
@@ -609,10 +622,7 @@ def cfg(event):
     else:
         edit(config, event.sets)
         save(config)
-        event.reply("ok")
-
-
-Command.add(cfg)
+        event.done()
 
 
 def dlt(event):
@@ -620,36 +630,30 @@ def dlt(event):
         event.reply("dlt <username>")
         return
     selector = {"user": event.args[0]}
-    for _fn, obj in find("user", selector):
+    for obj in find("user", selector):
         obj.__deleted__ = True
         save(obj)
-        event.reply("ok")
+        event.done()
         break
-
-
-Command.add(dlt)
 
 
 def met(event):
     if not event.rest:
-        _nr = 0
-        for _fn, obj in find("user"):
+        nmr = 0
+        for obj in find("user"):
             event.reply("%s %s %s %s" % (
-                                         _nr,
+                                         nmr,
                                          obj.user,
                                          obj.perms,
-                                         elapsed(time.time() - fntime(_fn)))
+                                         elapsed(time.time() - fntime(obj.__fnm__)))
                                         )
-            _nr += 1
+            nmr += 1
         return
     user = User()
     user.user = event.rest
     user.perms = ["USER"]
     save(user)
-    event.reply("ok")
-
-
-Command.add(met)
+    event.done()
 
 
 def mre(event):
@@ -671,9 +675,6 @@ def mre(event):
     event.reply("%s more in cache" % size)
 
 
-Command.add(mre)
-
-
 def pwd(event):
     if len(event.args) != 2:
         event.reply("pwd <nick> <password>")
@@ -685,4 +686,8 @@ def pwd(event):
     event.reply(dcd)
 
 
-Command.add(pwd)
+## runtime
+
+
+Class.add(Config)
+Class.add(User)

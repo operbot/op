@@ -5,14 +5,23 @@
 "thread"
 
 
+## import
+
+
 import unittest
 
 
-from opm.thr import Thread
+from op import Thread
+
+
+## define
 
 
 def test():
     pass
+
+
+## class
 
 
 class TestThread(unittest.TestCase):

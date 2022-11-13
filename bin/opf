@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
 # This file is placed in the Public Domain.
-# pylint: disable=C0116,W0611,C0413
+# pylint: disable=C0116,W0611,C0413,C0209
+
 
 "object programming"
+
+
+NAME = "opf"
+
+
+## import
 
 
 import os
@@ -11,21 +18,22 @@ import sys
 import time
 
 
-sys.path.insert(0, os.getcwd())
+from op import Wd, elapsed, fntime, find, keys, printable
 
 
-from op import Wd, allobj, elapsed, keys, fntime, printable
+## define
 
 
 Wd.workdir = os.path.expanduser("~/.op")
 
 
-starttime = time.time()
+## utility
 
 
 def fnd(args):
+    "fnd <workdir> [type] [selector]"
     if len(args) == 0:
-        print("op workdir [type] [selector]")
+        print("%s workdir [type] [selector]" % NAME)
         return
     wdr = args[0]
     if not os.path.exists(wdr):
@@ -40,18 +48,20 @@ def fnd(args):
             print("no types yet.")
         return
     otype = args[1]
-    res = list(allobj(otype))
-    _nr = 0
-    for _fn, obj in res:
+    nmr = 0
+    for obj in find(otype):
         txt = "%s %s %s" % (
-                            str(_nr),
+                            str(nmr),
                             printable(obj, keys(obj)),
-                            elapsed(time.time()-fntime(_fn))
+                            elapsed(time.time()-fntime(obj.__fnm__))
                            )
-        _nr += 1
+        nmr += 1
         print(txt)
-    if not _nr:
+    if not nmr:
         print("no result")
+
+
+## runtime
 
 
 fnd(sys.argv[1:])

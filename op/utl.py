@@ -1,38 +1,55 @@
 # This file is placed in the Public Domain.
-# pylint: disable=C0115,C0116,W0612,W0613
+# pylint: disable=R,C,W,C0302
 
 
 "utility"
 
 
+## import
+
+
+import getpass
 import os
-import pathlib
+import pwd
 import time
+import types
+
+
+from stat import ST_UID, ST_MODE, S_IMODE
+
+
+## define
 
 
 def __dir__():
     return (
-            "cdir",
-            "elapsed",
-            "fns",
-            "fntime",
-            "fnclass",
-            "spl",
-            "wait"
-           )
+            'debian',
+            'elapsed',
+            'filesize',
+            'locked',
+            'permission',
+            'spl',
+            'touch',
+            'user',
+            'wait'
+           ) 
 
 
-def cdir(path):
-    if os.path.exists(path):
-        return
-    if os.sep in path:
-        path = os.path.dirname(path)
-    pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+__all__ = __dir__()
+
+
+## utility
+
+
+def debian():
+    return os.path.isfile("/etc/debian_version")
 
 
 def elapsed(seconds, short=True):
     txt = ""
     nsec = float(seconds)
+    if nsec < 1:
+        return f"{nsec:.2f}s"
     year = 365*24*60*60
     week = 7*24*60*60
     nday = 24*60*60
@@ -47,7 +64,8 @@ def elapsed(seconds, short=True):
     hours = int(nsec/hour)
     nsec -= hours*hour
     minutes = int(nsec/minute)
-    sec = nsec - minutes*minute
+    nsec -= int(minute*minutes)
+    sec = int(nsec)
     if years:
         txt += "%sy" % years
     if weeks:
@@ -55,65 +73,19 @@ def elapsed(seconds, short=True):
     if nrdays:
         txt += "%sd" % nrdays
     if years and short and txt:
-        return txt
+        return txt.strip()
     if hours:
         txt += "%sh" % hours
-    if nrdays and short and txt:
-        return txt
     if minutes:
         txt += "%sm" % minutes
-    if hours and short and txt:
-        return txt
-    if sec == 0:
-        txt += "0s"
-    else:
-        txt += "%ss" % int(sec)
+    if sec:
+        txt += "%ss" % sec
     txt = txt.strip()
     return txt
 
 
-def fns(path, timed=None):
-    if not path:
-        return []
-    if not os.path.exists(path):
-        return []
-    res = []
-    for rootdir, dirs, _files in os.walk(path, topdown=False):
-        for dname in  dirs:
-            ddd = os.path.join(rootdir, dname)
-            fls = sorted(os.listdir(ddd))
-            if fls:
-                opath = os.path.join(ddd, fls[-1])
-                if (
-                    timed
-                    and "from" in timed
-                    and timed["from"]
-                    and fntime(opath) < timed["from"]
-                   ):
-                    continue
-                if timed and timed.to and fntime(opath) > timed.to:
-                    continue
-                try:
-                    fntime(opath)
-                except ValueError:
-                    continue
-                opath = opath.split("store")[-1][1:]
-                res.append(opath)
-    return sorted(res, key=fntime)
-
-
-def fntime(path):
-    after = 0
-    path = " ".join(path.split(os.sep)[-2:])
-    if "." in path:
-        path, after = path.rsplit(".")
-    tme = time.mktime(time.strptime(path, "%Y-%m-%d %H:%M:%S"))
-    if after:
-        try:
-            tme = tme + float(".%s"% after)
-        except ValueError:
-            pass
-    return tme
+def filesize(path):
+    return os.stat(path)[6]
 
 
 def locked(lock):
@@ -140,15 +112,21 @@ def locked(lock):
     return lockeddec
 
 
-def fnclass(path):
-    pth = []
+def permission(ddir, username, group=None, umode=0o700):
+    group = group or username
     try:
-        _rest, *pth = path.split("store")
-    except ValueError:
-        pass
-    if not pth:
-        pth = path.split(os.sep)
-    return pth[0]
+        pwdline = pwd.getpwnam(username)
+        uid = pwdline.pw_uid
+        gid = pwdline.pw_gid
+    except KeyError:
+        uid = os.getuid()
+        gid = os.getgid()
+    stats = os.stat(ddir)
+    if stats[ST_UID] != uid:
+        os.chown(ddir, uid, gid)
+    if S_IMODE(stats[ST_MODE]) != umode:
+        os.chmod(ddir, umode)
+    return True
 
 
 def spl(txt):
@@ -157,6 +135,18 @@ def spl(txt):
     except (TypeError, ValueError):
         res = txt
     return [x for x in res if x]
+
+
+def touch(fname):
+    fd = os.open(fname, os.O_WRONLY | os.O_CREAT)
+    os.close(fd)
+
+
+def user():
+    try:
+        return getpass.getuser() 
+    except ImportError:
+        return ""
 
 
 def wait():

@@ -2,15 +2,26 @@
 # This file is placed in the Public Domain.
 
 
-"build distribution"
+"wipe"
+
+
+## import
 
 
 import os
 
 
+## utility
+
+
 def popen(txt):
+    "run command"
     for line in os.popen(txt).readlines():
-        print(line.rstrip())
+        print(line.strip())
 
 
-popen("python3 setup.py sdist")
+## runtime
+
+
+popen("fin/clean")
+popen("rm -fR env")

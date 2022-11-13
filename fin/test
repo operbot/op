@@ -2,17 +2,25 @@
 # This file is placed in the Public Domain.
 
 
-"clear all"
+"test"
+
+
+## import
 
 
 import os
 
 
+## utility
+
+
 def popen(txt):
+    "run command"
     for line in os.popen(txt).readlines():
-        print(line.rstrip())
+        print(line.strip())
 
 
-popen("bins/clean")
-popen("rm -fR ~/.cache/pip/")
-popen("rm -fR env html")
+## runtime
+
+
+popen("pytest")

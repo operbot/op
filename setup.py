@@ -12,16 +12,15 @@ def read():
 
 
 setup(
-    name="objectprogramming",
-    version="101",
+    name="op",
+    version="2000",
     author="Bart Thate",
     author_email="operbot100@gmail.com",
     url="http://github.com/operbot/op",
-    description="object programming",
+    description="functional programming with objects",
     long_description=read(),
     license="Public Domain",
-    packages=["op", "opm"],
-    scripts=["bin/op", "bin/opc", "bin/ops", "bin/opi", "bin/opd"],
+    packages=["op"],
     classifiers=[
         "Development Status :: 4 - Beta",
         "License :: Public Domain",

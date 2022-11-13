@@ -1,17 +1,19 @@
 # This file is placed in the Public Domain.
-# pylint: disable=C0115,C0116,R0904
+# pylint: disable=E1101,C0116,C0411,C2801,R0904,C0015
 
 
-"object programming"
+"object"
 
 
+import json
 import os
 import unittest
 
 
-from op import Object, items, keys, register, update, values
-from op import load, kind, save, edit, dumps, loads, printable
-from op import Wd
+from op.obj import Object, Wd, items, keys, register, update, values
+from op.obj import edit, kind, load, save
+from op.obj import ObjectDecoder, ObjectEncoder
+from op.obj import printable
 
 
 Wd.workdir = ".test"
@@ -26,6 +28,7 @@ attrs1 = (
          'clear',
          'copy',
          'fromkeys',
+         'get',
          'items',
          'keys',
          'matchkey',
@@ -41,13 +44,16 @@ attrs1 = (
 attrs2 = (
           '__class__',
           '__delattr__',
+          '__delitem__',
           '__dict__',
           '__dir__',
           '__doc__',
           '__eq__',
+          '__fnm__',
           '__format__',
           '__ge__',
           '__getattribute__',
+          '__getitem__',
           '__gt__',
           '__hash__',
           '__init__',
@@ -63,11 +69,20 @@ attrs2 = (
           '__reduce_ex__',
           '__repr__',
           '__setattr__',
+          '__setitem__',
           '__sizeof__',
+          '__slots__',
           '__str__',
           '__subclasshook__',
-          '__weakref__'
          )
+
+
+def dumps(name):
+    return json.dumps(name, cls=ObjectEncoder)
+
+
+def loads(name):
+    return json.loads(name, cls=ObjectDecoder)
 
 
 class TestObject(unittest.TestCase):
@@ -166,7 +181,7 @@ class TestObject(unittest.TestCase):
         edit(obj, dta)
         self.assertEqual(obj.key, "value")
 
-    def test_opformat(self):
+    def test_printable(self):
         obj = Object()
         self.assertEqual(printable(obj), "")
 

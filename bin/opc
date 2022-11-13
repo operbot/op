@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 # This file is placed in the Public Domain.
-# pylint: disable=C0115,C0116,C0413
+# pylint: disable=C0115,C0116,C0413,C0209
 
 
-"object programming shell"
+"command"
+
+
+## import
 
 
 import importlib
@@ -12,19 +15,17 @@ import sys
 import time
 
 
-sys.path.insert(0, os.getcwd())
+from op import Event, Handler, Wd, scan, scandir
+from opm import cmds, irc
 
 
-from op import Wd
-from opm.run import Bus, Event, Handler, scan, scandir
-
-from opm import cmds
+## define
 
 
 Wd.workdir = os.path.expanduser("~/.op")
 
 
-starttime = time.time()
+## class
 
 
 class CLI(Handler):
@@ -33,16 +34,29 @@ class CLI(Handler):
         print(txt)
 
 
+## utility
+
+
+def importer(pname, mname):
+    name = "%s.%s" % (pname, mname)
+    try:
+        mod = importlib.import_module(name, pname)
+        scan(mod)
+    except ModuleNotFoundError:
+        pass
+
+
+## runtime
+
+
 cli = CLI()
 
 
-def importer(packagename, modulename):
-    name = "%s.%s" % (packagename, modulename)
-    try:
-        mod = importlib.import_module(name, packagename)
-        scan(cli, mod)
-    except ModuleNotFoundError:
-        pass
+scan(cmds)
+scan(irc)
+
+
+starttime = time.time()
 
 
 def main():
